@@ -1,0 +1,69 @@
+package com.pubburi.pub.model.service;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.pubburi.pub.model.dao.ProductDao;
+import com.pubburi.pub.model.dto.Product;
+
+@Service
+public class ProductServiceImpl implements ProductService {
+
+	@Autowired
+	private ProductDao productDao;
+
+	@Override
+	public List<Product> getProductList() {
+		return productDao.selectAll();
+	}
+
+	@Override
+	public List<Product> searchProducts(String type, String q, String sort) {
+		return productDao.selectFiltered(blankToNull(type), blankToNull(q), blankToNull(sort));
+	}
+
+	@Override
+	public Product getProductById(int id) {
+		if (id <= 0) {
+			return null;
+		}
+		return productDao.selectById(id);
+	}
+
+	@Override
+	public int addProduct(Product product) {
+		if (product == null || product.getName() == null || product.getType() == null || product.getPrice() <= 0) {
+			return 0;
+		}
+		return productDao.insert(product);
+	}
+
+	@Override
+	public int updateProduct(Product product) {
+		if (product == null || product.getId() <= 0) {
+			return 0;
+		}
+		return productDao.update(product);
+	}
+
+	@Override
+	public int removeProduct(int id) {
+		if (id <= 0) {
+			return 0;
+		}
+		return productDao.delete(id);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Product> getPopularProducts() {
+		return productDao.selectPopular();
+	}
+
+	private String blankToNull(String value) {
+		return value == null || value.trim().isEmpty() ? null : value.trim();
+	}
+}
