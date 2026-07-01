@@ -31,12 +31,18 @@ docker compose up -d db
 scripts/dev-backend.sh
 ```
 
+backend는 `.env`를 읽어 `PUBBURI_SERVER_PORT` 기본값인 `9987`에 Spring Boot를 실행한다.
+
 ## Start Frontend
 
 ```bash
+cd pubburi-vue
 npm ci
+cd ..
 scripts/dev-frontend.sh
 ```
+
+frontend는 `127.0.0.1:5173`에서 실행되며, Vite proxy가 `/api` 요청을 `localhost:9987`로 전달한다.
 
 ## Stop Local Runtime
 
@@ -53,3 +59,16 @@ scripts/check.sh
 ```
 
 개별 확인이 필요하면 `cd Server && ./mvnw test`, `cd pubburi-vue && npm run test && npm run build`를 실행한다.
+
+현재 검증 기준:
+
+- Backend: `./mvnw test`, 9 tests.
+- Frontend: `npm run test`, 10 tests.
+- Frontend build: `npm run build`.
+- 로컬 URL: Web `http://localhost:5173`, API `http://localhost:9987/api`, Swagger UI `http://localhost:9987/docs`.
+
+## Asset Notes
+
+- `pubburi-vue/public/images`는 WebP asset만 배포 대상으로 둔다.
+- 대응 WebP가 있는 PNG/JPG 원본은 제거된 상태다.
+- 새 이미지를 추가할 때는 `cd pubburi-vue && npm run optimize:images`로 WebP를 생성한 뒤, public 배포 경로가 WebP를 가리키는지 확인한다.

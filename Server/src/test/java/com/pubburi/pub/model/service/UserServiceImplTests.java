@@ -89,6 +89,12 @@ class UserServiceImplTests {
 		}
 
 		@Override
+		public int incrementStamps(String id, int quantity) {
+			saved.setStamps(saved.getStamps() + quantity);
+			return 1;
+		}
+
+		@Override
 		public User selectById(String userId) {
 			return saved != null && saved.getId().equals(userId) ? saved : null;
 		}

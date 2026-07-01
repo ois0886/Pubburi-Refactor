@@ -4,23 +4,23 @@ import { api } from '../services/api'
 const emptyPage = (size = 12) => ({ items: [], page: 1, size, total: 0, totalPages: 0, hasNext: false })
 
 export const carouselImages = [
-  '/images/carousel/banner1.png',
-  '/images/carousel/banner2.png',
-  '/images/carousel/banner3.png',
-  '/images/carousel/banner4.png',
-  '/images/carousel/banner5.png',
-  '/images/carousel/banner6.png',
+  '/images/carousel/banner1.webp',
+  '/images/carousel/banner2.webp',
+  '/images/carousel/banner3.webp',
+  '/images/carousel/banner4.webp',
+  '/images/carousel/banner5.webp',
+  '/images/carousel/banner6.webp',
 ]
 
 export const categories = [
-  { image: '/images/category/탁주.png', label: '탁주' },
-  { image: '/images/category/청주.png', label: '약 · 청주' },
-  { image: '/images/category/과실주.png', label: '과실주' },
-  { image: '/images/category/증류주.png', label: '증류주' },
-  { image: '/images/category/맥주.png', label: '맥주' },
-  { image: '/images/category/양주.png', label: '양주' },
-  { image: '/images/category/위스키.png', label: '위스키' },
-  { image: '/images/category/사케.png', label: '사케' },
+  { image: '/images/category/탁주.webp', label: '탁주' },
+  { image: '/images/category/청주.webp', label: '약 · 청주' },
+  { image: '/images/category/과실주.webp', label: '과실주' },
+  { image: '/images/category/증류주.webp', label: '증류주' },
+  { image: '/images/category/맥주.webp', label: '맥주' },
+  { image: '/images/category/양주.webp', label: '양주' },
+  { image: '/images/category/위스키.webp', label: '위스키' },
+  { image: '/images/category/사케.webp', label: '사케' },
 ]
 
 export const useCatalogStore = defineStore('catalog', {

@@ -53,6 +53,12 @@
         WHERE id = #{id}
     </update>
 
+    <update id="incrementStamps">
+        UPDATE t_user
+        SET stamps = stamps + #{quantity}
+        WHERE id = #{id}
+    </update>
+
     <select id="selectById" parameterType="string" resultType="User">
         SELECT id, name, password_hash AS pass, stamps, role
         FROM t_user

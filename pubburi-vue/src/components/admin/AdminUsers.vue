@@ -4,7 +4,7 @@
       <div v-for="user in admin.users" :key="user.id" class="table-row wide">
         <span>{{ user.id }}</span>
         <strong>{{ user.name }}</strong>
-        <span>{{ user.role }}</span>
+        <span class="badge" :class="{ muted: user.role !== 'ADMIN' }">{{ user.role }}</span>
         <span>스탬프 {{ user.stamps }}</span>
         <button type="button" class="btn btn-sm btn-outline-danger" @click="deleteUser(user.id)">삭제</button>
       </div>
@@ -25,7 +25,7 @@ const ui = useUiStore()
 onMounted(() => loadPage(1))
 
 function loadPage(page) {
-  return ui.run(() => admin.load({ page }))
+  return ui.run(() => admin.loadUsers({ page }))
 }
 
 function deleteUser(id) {

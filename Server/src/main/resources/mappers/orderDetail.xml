@@ -11,6 +11,14 @@
         VALUES (#{orderId}, #{productId}, #{quantity})
     </insert>
 
+    <insert id="insertAll">
+        INSERT INTO t_order_detail (order_id, product_id, quantity)
+        VALUES
+        <foreach collection="details" item="detail" separator=",">
+            (#{detail.orderId}, #{detail.productId}, #{detail.quantity})
+        </foreach>
+    </insert>
+
     <!-- 주문 ID로 상세 조회 -->
     <select id="selectByOrderId" parameterType="int" resultType="OrderDetail">
         SELECT * FROM t_order_detail WHERE order_id = #{orderId}

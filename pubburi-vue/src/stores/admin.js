@@ -24,32 +24,45 @@ export const useAdminStore = defineStore('admin', {
     users: (state) => state.usersPage.items,
   },
   actions: {
-    async load(params = {}) {
+    async loadOrders(params = {}) {
       const page = { page: 1, size: 20, ...params }
-      const [orders, comments, users] = await Promise.all([
-        api.adminOrders(page),
-        api.adminComments(page),
-        api.adminUsers(page),
-      ])
-      this.ordersPage = orders
-      this.commentsPage = comments
-      this.usersPage = users
+      this.ordersPage = await api.adminOrders(page)
+      return this.ordersPage
+    },
+    async loadComments(params = {}) {
+      const page = { page: 1, size: 20, ...params }
+      this.commentsPage = await api.adminComments(page)
+      return this.commentsPage
+    },
+    async loadUsers(params = {}) {
+      const page = { page: 1, size: 20, ...params }
+      this.usersPage = await api.adminUsers(page)
+      return this.usersPage
+    },
+    async loadActive(params = {}) {
+      if (this.tab === 'orders') return this.loadOrders(params)
+      if (this.tab === 'comments') return this.loadComments(params)
+      if (this.tab === 'users') return this.loadUsers(params)
+      return null
+    },
+    async load(params = {}) {
+      return this.loadActive(params)
     },
     async completeOrder(id) {
       await api.completeOrder(id)
-      await this.load()
+      await this.loadOrders({ page: this.ordersPage.page })
     },
     async deleteOrder(id) {
       await api.deleteOrder(id)
-      await this.load()
+      await this.loadOrders({ page: this.ordersPage.page })
     },
     async deleteComment(id) {
       await api.deleteComment(id)
-      await this.load()
+      await this.loadComments({ page: this.commentsPage.page })
     },
     async deleteUser(id) {
       await api.deleteUser(id)
-      await this.load()
+      await this.loadUsers({ page: this.usersPage.page })
     },
   },
 })

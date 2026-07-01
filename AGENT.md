@@ -1,6 +1,6 @@
 # Pubburi Agent Guide
 
-이 문서는 주전부리(Pubburi) 리팩토링 저장소에서 작업하는 에이전트와 개발자가 지켜야 할 운영 규칙입니다. 프로젝트는 SSAFY 13기 관통 프로젝트 기반이며, 현재 목표는 로컬 실행 가능한 구조로 안정화하는 것입니다.
+이 문서는 주전부리(Pubburi) 리팩토링 저장소에서 작업하는 에이전트와 개발자가 지켜야 할 운영 규칙입니다. 프로젝트는 SSAFY 13기 관통 프로젝트 기반이며, 현재 목표는 로컬 실행 가능한 구조를 유지하면서 UI, API, 성능 최적화를 계속 안전하게 반영하는 것입니다.
 
 ## 기본 원칙
 
@@ -9,6 +9,8 @@
 - 코드 변경 후 관련 문서를 함께 갱신한다.
 - 커밋 메시지는 `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:` 중 작업 성격에 맞는 접두사를 사용한다.
 - public repo 기준으로 개인 위치, 개인 계정, 실제 운영 설정처럼 보이는 값은 seed와 문서에서도 제거한다.
+- Bootstrap은 제거된 상태다. 새 UI 작업은 외부 UI 라이브러리 추가보다 `pubburi-vue/src/style.css`의 로컬 primitive를 먼저 확장한다.
+- public image asset은 WebP를 기본으로 유지한다. 대응 WebP가 있는 PNG/JPG를 다시 추가하지 않는다.
 
 ## 작업 순서
 
@@ -25,13 +27,18 @@
 ### backend-agent
 
 - 담당: Spring Boot controller, service, DAO, MyBatis mapper, session 기반 인증 흐름.
-- 확인: `/api` prefix, `ApiResponse`, request validation, `AccessGuard`, service transaction 경계를 유지한다.
+- 확인: `/api` prefix, `ApiResponse`, request validation, `AccessGuard`, service transaction 경계, 전역 `CorsConfig`를 유지한다.
+- 주문 목록 상세는 nested select로 되돌리지 말고 batch 조회 후 service에서 attach한다.
+- 주문 생성의 중복 상품 합산, batch insert, `incrementStamps` 원자적 갱신을 유지한다.
 - 검증: `cd Server && ./mvnw test`.
 
 ### frontend-agent
 
 - 담당: Vue 화면, API client, 장바구니, 관리자 화면, 반응형 UI.
 - 확인: Router view, Pinia store, `src/services/api.js`, 공통 컴포넌트 경계를 유지한다.
+- 관리자 데이터는 active tab lazy load를 유지한다.
+- 이미지 path는 WebP 우선으로 유지하고, `ImageWithFallback` fallback도 WebP icon을 사용한다.
+- UI는 전통주 커머스 톤의 neutral/ink/green/gold palette와 8px radius 기준을 유지한다.
 - 검증: `cd pubburi-vue && npm run test && npm run build`.
 
 ### data-agent
@@ -49,7 +56,7 @@
 ### performance-agent
 
 - 담당: DB index, query 범위, dependency pruning, build size, API round-trip 감소 기록.
-- 확인: 변경 전후의 근거를 `docs/PERFORMANCE-OPTIMIZATION.md`에 남긴다.
+- 확인: 변경 전후의 근거를 `docs/PERFORMANCE-OPTIMIZATION.md`에 남긴다. 현재 기준은 backend 9 tests, frontend 10 tests, `dist/images` 약 3.4 MB다.
 - 검증: backend test 시간, frontend build 결과, 주요 번들 크기 또는 쿼리 개선 근거를 기록한다.
 
 ### docs-agent

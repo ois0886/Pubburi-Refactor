@@ -1,7 +1,7 @@
 <template>
   <picture>
     <source v-if="webp" :srcset="webp" type="image/webp" />
-    <img :src="src || fallback" :alt="alt" loading="lazy" decoding="async" @error="onError" />
+    <img :src="src || fallback" :alt="alt" :loading="loading" decoding="async" @error="onError" />
   </picture>
 </template>
 
@@ -20,7 +20,11 @@ const props = defineProps({
   },
   fallback: {
     type: String,
-    default: '/images/icon/mainIcon.png',
+    default: '/images/icon/mainIcon.webp',
+  },
+  loading: {
+    type: String,
+    default: 'lazy',
   },
 })
 

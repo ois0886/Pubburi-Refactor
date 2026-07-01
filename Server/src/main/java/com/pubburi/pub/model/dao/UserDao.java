@@ -23,5 +23,7 @@ public interface UserDao {
 
 	int updateStamp(User user);
 
+	int incrementStamps(@Param("id") String id, @Param("quantity") int quantity);
+
 	User selectById(String userId);
 }

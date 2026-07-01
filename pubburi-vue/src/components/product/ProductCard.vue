@@ -6,7 +6,10 @@
     <div class="product-body">
       <p class="product-type">{{ product.type }}</p>
       <h2>{{ product.name }}</h2>
-      <p>{{ money(product.price) }}원 · {{ product.abv }}%</p>
+      <p class="product-meta">
+        <strong>{{ money(product.price) }}원</strong>
+        <span>{{ product.abv }}%</span>
+      </p>
       <div class="button-row">
         <button v-if="showDetail" type="button" class="btn btn-outline-dark btn-sm" @click="$emit('open', product)">상세</button>
         <button type="button" class="btn btn-warning btn-sm" @click="$emit('add', product)">담기</button>

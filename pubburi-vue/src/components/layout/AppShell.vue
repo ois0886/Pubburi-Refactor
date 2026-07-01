@@ -2,7 +2,7 @@
   <div class="app-shell">
     <header class="topbar">
       <RouterLink class="brand" to="/" @click="ui.clear">
-        <ImageWithFallback src="/images/icon/mainIcon.png" alt="" />
+        <ImageWithFallback src="/images/icon/mainIcon.webp" alt="" />
         <span>주점부리</span>
       </RouterLink>
 

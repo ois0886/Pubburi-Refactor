@@ -66,6 +66,8 @@ public interface OrderDao {
 	 */
 	List<OrderDetailInfo> getOrderDetailInfo(int orderId);
 
+	List<OrderDetailInfo> getOrderDetailInfoByOrderIds(@Param("orderIds") List<Integer> orderIds);
+
 	List<OrderInfo> selectOrderInfoListByUserId(String userId);
 
 	List<OrderInfo> selectOrderInfoPageByUserId(@Param("userId") String userId, @Param("limit") int limit,

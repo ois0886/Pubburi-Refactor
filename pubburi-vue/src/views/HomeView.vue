@@ -1,22 +1,28 @@
 <template>
   <section class="view">
-    <div id="mainCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel">
-      <div class="carousel-inner">
-        <div v-for="(image, index) in carouselImages" :key="image" class="carousel-item" :class="{ active: index === 0 }">
-          <ImageWithFallback :src="image" alt="" />
-        </div>
+    <section class="hero-carousel">
+      <div v-for="(image, index) in carouselImages" :key="image" class="hero-slide" :class="{ active: index === activeIndex }">
+        <ImageWithFallback :src="image" alt="" :loading="index === 0 ? 'eager' : 'lazy'" />
       </div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <div class="hero-copy">
+        <p>오늘의 전통주 셀렉션</p>
+        <h1>향과 계절에 맞춰 고르는 주점부리</h1>
+        <RouterLink class="btn btn-light" to="/products">상품 둘러보기</RouterLink>
+      </div>
+      <button class="carousel-control prev" type="button" aria-label="previous banner" @click="previousSlide">
+        <span aria-hidden="true">‹</span>
       </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <button class="carousel-control next" type="button" aria-label="next banner" @click="nextSlide">
+        <span aria-hidden="true">›</span>
       </button>
-    </div>
+    </section>
 
     <section class="section-band">
       <div class="section-heading">
-        <h1>오늘의 주점부리</h1>
+        <div>
+          <p class="section-kicker">Category</p>
+          <h2>취향으로 빠르게 찾기</h2>
+        </div>
         <RouterLink class="btn btn-outline-dark btn-sm" to="/products">전체 보기</RouterLink>
       </div>
       <div class="category-strip">
@@ -24,6 +30,15 @@
           <ImageWithFallback :src="category.image" :alt="category.label" />
           <span>{{ category.label }}</span>
         </button>
+      </div>
+    </section>
+
+    <section class="section-band">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Popular</p>
+          <h2>많이 찾는 술</h2>
+        </div>
       </div>
       <div class="product-grid">
         <ProductCard
@@ -39,7 +54,10 @@
 
     <section class="section-band">
       <div class="section-heading">
-        <h2>매장</h2>
+        <div>
+          <p class="section-kicker">Stores</p>
+          <h2>가까운 매장</h2>
+        </div>
       </div>
       <div class="market-grid">
         <article v-for="market in catalog.markets" :key="market.id" class="market-row">
@@ -52,7 +70,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import ProductCard from '../components/product/ProductCard.vue'
 import ImageWithFallback from '../components/ui/ImageWithFallback.vue'
@@ -64,6 +82,7 @@ const catalog = useCatalogStore()
 const cart = useCartStore()
 const ui = useUiStore()
 const router = useRouter()
+const activeIndex = ref(0)
 
 onMounted(() => {
   ui.run(async () => {
@@ -74,6 +93,14 @@ onMounted(() => {
 function filterCategory(type) {
   catalog.filters = { ...catalog.filters, type, q: '', page: 1 }
   router.push('/products')
+}
+
+function previousSlide() {
+  activeIndex.value = (activeIndex.value + carouselImages.length - 1) % carouselImages.length
+}
+
+function nextSlide() {
+  activeIndex.value = (activeIndex.value + 1) % carouselImages.length
 }
 
 function openProduct(product) {

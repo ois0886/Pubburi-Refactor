@@ -5,7 +5,7 @@
         <span>#{{ order.oId }}</span>
         <strong>{{ order.userId }}</strong>
         <span>{{ order.orderType }}</span>
-        <span>{{ order.completed === 'Y' ? '완료' : '진행중' }}</span>
+        <span class="badge" :class="{ muted: order.completed !== 'Y' }">{{ order.completed === 'Y' ? '완료' : '진행중' }}</span>
         <button type="button" class="btn btn-sm btn-outline-dark" @click="completeOrder(order.oId)">완료</button>
         <button type="button" class="btn btn-sm btn-outline-danger" @click="deleteOrder(order.oId)">삭제</button>
       </div>
@@ -26,7 +26,7 @@ const ui = useUiStore()
 onMounted(() => loadPage(1))
 
 function loadPage(page) {
-  return ui.run(() => admin.load({ page }))
+  return ui.run(() => admin.loadOrders({ page }))
 }
 
 function completeOrder(id) {

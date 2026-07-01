@@ -1,6 +1,9 @@
 package com.pubburi.pub.model.service;
 
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +20,6 @@ import com.pubburi.pub.model.dto.OrderDetail;
 import com.pubburi.pub.model.dto.OrderDetailInfo;
 import com.pubburi.pub.model.dto.OrderInfo;
 import com.pubburi.pub.model.dto.Stamp;
-import com.pubburi.pub.model.dto.User;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -43,31 +45,25 @@ public class OrderServiceImpl implements OrderService {
 		if (order == null || isBlank(order.getUserId()) || details == null || details.isEmpty()) {
 			return 0;
 		}
+		List<OrderDetail> normalizedDetails = normalizeDetails(details);
 		if (isBlank(order.getCompleted())) {
 			order.setCompleted("N");
 		}
 		int result = orderDao.insert(order);
 		int totalQuantity = 0;
-		for (OrderDetail detail : details) {
-			if (detail.getProductId() <= 0 || detail.getQuantity() <= 0) {
-				throw new IllegalArgumentException("Invalid order detail");
-			}
+		for (OrderDetail detail : normalizedDetails) {
 			detail.setOrderId(order.getoId());
-			orderDetailDao.insert(detail);
 			productDao.incrementOrderCount(detail.getProductId(), detail.getQuantity());
 			totalQuantity += detail.getQuantity();
 		}
+		orderDetailDao.insertAll(normalizedDetails);
 		Stamp stamp = new Stamp();
 		stamp.setUserId(order.getUserId());
 		stamp.setOrderId(order.getoId());
 		stamp.setQuantity(totalQuantity);
 		stampDao.insert(stamp);
 
-		User user = userDao.selectById(order.getUserId());
-		if (user != null) {
-			user.setStamps(user.getStamps() + totalQuantity);
-			userDao.updateStamp(user);
-		}
+		userDao.incrementStamps(order.getUserId(), totalQuantity);
 		return result;
 	}
 
@@ -76,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
 		if (isBlank(userId)) {
 			return List.of();
 		}
-		return orderDao.selectOrderInfoListByUserId(userId);
+		return attachDetails(orderDao.selectOrderInfoListByUserId(userId));
 	}
 
 	@Override
@@ -84,18 +80,18 @@ public class OrderServiceImpl implements OrderService {
 		if (isBlank(userId)) {
 			return PageResponse.of(List.of(), criteria, 0);
 		}
-		List<OrderInfo> orders = orderDao.selectOrderInfoPageByUserId(userId, criteria.size(), criteria.offset());
+		List<OrderInfo> orders = attachDetails(orderDao.selectOrderInfoPageByUserId(userId, criteria.size(), criteria.offset()));
 		return PageResponse.of(orders, criteria, orderDao.countOrderInfoByUserId(userId));
 	}
 
 	@Override
 	public List<OrderInfo> getAllOrders() {
-		return orderDao.selectAllOrderInfo();
+		return attachDetails(orderDao.selectAllOrderInfo());
 	}
 
 	@Override
 	public PageResponse<OrderInfo> getAllOrders(PageCriteria criteria) {
-		List<OrderInfo> orders = orderDao.selectAllOrderInfoPaged(criteria.size(), criteria.offset());
+		List<OrderInfo> orders = attachDetails(orderDao.selectAllOrderInfoPaged(criteria.size(), criteria.offset()));
 		return PageResponse.of(orders, criteria, orderDao.countAllOrderInfo());
 	}
 
@@ -128,23 +124,54 @@ public class OrderServiceImpl implements OrderService {
 		if (oId <= 0) {
 			return null;
 		}
-		return orderDao.selectOrderInfo(oId);
+		OrderInfo order = orderDao.selectOrderInfo(oId);
+		if (order == null) {
+			return null;
+		}
+		return attachDetails(List.of(order)).get(0);
 	}
 
 	@Override
 	public List<OrderInfo> getLastMonthOrder(String id) {
-		return isBlank(id) ? List.of() : orderDao.getLastMonthOrder(id);
+		return isBlank(id) ? List.of() : attachDetails(orderDao.getLastMonthOrder(id));
 	}
 
 	@Override
 	public List<OrderInfo> getLast6MonthOrder(String id) {
-		return isBlank(id) ? List.of() : orderDao.getLast6MonthOrder(id);
+		return isBlank(id) ? List.of() : attachDetails(orderDao.getLast6MonthOrder(id));
 	}
 
-	@SuppressWarnings("unused")
-	private void attachDetails(OrderInfo orderInfo) {
-		List<OrderDetailInfo> details = orderDao.getOrderDetailInfo(orderInfo.getoId());
-		orderInfo.setDetails(details);
+	private List<OrderDetail> normalizeDetails(List<OrderDetail> details) {
+		Map<Integer, OrderDetail> byProductId = new LinkedHashMap<>();
+		for (OrderDetail detail : details) {
+			if (detail == null || detail.getProductId() <= 0 || detail.getQuantity() <= 0) {
+				throw new IllegalArgumentException("Invalid order detail");
+			}
+			byProductId.compute(detail.getProductId(), (productId, existing) -> {
+				if (existing == null) {
+					OrderDetail normalized = new OrderDetail();
+					normalized.setProductId(productId);
+					normalized.setQuantity(detail.getQuantity());
+					return normalized;
+				}
+				existing.setQuantity(existing.getQuantity() + detail.getQuantity());
+				return existing;
+			});
+		}
+		return List.copyOf(byProductId.values());
+	}
+
+	private List<OrderInfo> attachDetails(List<OrderInfo> orders) {
+		if (orders == null || orders.isEmpty()) {
+			return List.of();
+		}
+		List<Integer> orderIds = orders.stream().map(OrderInfo::getoId).toList();
+		Map<Integer, List<OrderDetailInfo>> detailsByOrderId = orderDao.getOrderDetailInfoByOrderIds(orderIds).stream()
+				.collect(Collectors.groupingBy(OrderDetailInfo::getOrderId));
+		for (OrderInfo order : orders) {
+			order.setDetails(detailsByOrderId.getOrDefault(order.getoId(), List.of()));
+		}
+		return orders;
 	}
 
 	private boolean isBlank(String value) {

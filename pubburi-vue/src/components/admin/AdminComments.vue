@@ -26,7 +26,7 @@ const ui = useUiStore()
 onMounted(() => loadPage(1))
 
 function loadPage(page) {
-  return ui.run(() => admin.load({ page }))
+  return ui.run(() => admin.loadComments({ page }))
 }
 
 function deleteComment(id) {

@@ -27,7 +27,7 @@
         ORDER BY o_id DESC
     </select>
 
-    <select id="selectById" parameterType="int" resultMap="orderDetailMap">
+    <select id="selectById" parameterType="int" resultMap="orderMap">
         SELECT o_id, user_id, order_type, order_table, completed, order_time
         FROM t_order
         WHERE o_id = #{oId}
@@ -54,6 +54,26 @@
         JOIN t_product p ON d.product_id = p.id
         WHERE d.order_id = #{orderId}
         ORDER BY d.d_id ASC
+    </select>
+
+    <select id="getOrderDetailInfoByOrderIds" resultType="OrderDetailInfo">
+        SELECT
+            d.d_id AS id,
+            d.order_id AS orderId,
+            d.product_id AS productId,
+            d.quantity,
+            p.name,
+            p.type,
+            p.price AS unitPrice,
+            (p.price * d.quantity) AS sumPrice,
+            p.img
+        FROM t_order_detail d
+        JOIN t_product p ON d.product_id = p.id
+        WHERE d.order_id IN
+        <foreach collection="orderIds" item="orderId" open="(" separator="," close=")">
+            #{orderId}
+        </foreach>
+        ORDER BY d.order_id DESC, d.d_id ASC
     </select>
 
     <select id="selectOrderInfoListByUserId" parameterType="string" resultMap="orderInfoMap">
@@ -111,17 +131,13 @@
         ORDER BY o_id DESC
     </select>
 
-    <resultMap id="orderDetailMap" type="Order">
+    <resultMap id="orderMap" type="Order">
         <id property="oId" column="o_id" />
         <result property="userId" column="user_id" />
         <result property="orderType" column="order_type" />
         <result property="orderTable" column="order_table" />
         <result property="completed" column="completed" />
         <result property="orderTime" column="order_time" />
-        <collection property="details"
-                    ofType="OrderDetail"
-                    column="o_id"
-                    select="com.pubburi.pub.model.dao.OrderDetailDao.selectByOrderId" />
     </resultMap>
 
     <resultMap id="orderInfoMap" type="OrderInfo">
@@ -131,9 +147,5 @@
 	    <result property="orderTable" column="order_table" />
 	    <result property="orderTime" column="order_time" />
 	    <result property="completed" column="completed" />
-	    <collection property="details"
-	                ofType="OrderDetailInfo"
-	                column="o_id"
-	                select="getOrderDetailInfo" />
 	</resultMap>
 </mapper>

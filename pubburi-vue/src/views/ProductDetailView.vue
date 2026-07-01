@@ -6,11 +6,12 @@
     <div class="detail-panel">
       <p class="product-type">{{ catalog.selectedProduct.type }}</p>
       <h1>{{ catalog.selectedProduct.name }}</h1>
-      <p>
-        {{ money(catalog.selectedProduct.price) }}원 · 도수 {{ catalog.selectedProduct.abv }}% · 주문
-        {{ catalog.selectedProduct.orderCount }}회
-      </p>
-      <button type="button" class="btn btn-warning" @click="addToCart(catalog.selectedProduct)">장바구니 담기</button>
+      <div class="detail-stats">
+        <span class="stat-pill">{{ money(catalog.selectedProduct.price) }}원</span>
+        <span class="stat-pill">도수 {{ catalog.selectedProduct.abv }}%</span>
+        <span class="stat-pill">주문 {{ catalog.selectedProduct.orderCount }}회</span>
+      </div>
+      <button type="button" class="btn btn-warning btn-wide" @click="addToCart(catalog.selectedProduct)">장바구니 담기</button>
 
       <div class="comment-box">
         <h2>댓글</h2>
@@ -27,8 +28,10 @@
         </form>
         <p v-else class="muted">로그인 후 댓글을 남길 수 있습니다.</p>
         <div v-for="comment in catalog.comments" :key="comment.id" class="comment-row">
-          <strong>{{ comment.userId }}</strong>
-          <span>{{ Number(comment.rating).toFixed(1) }}점</span>
+          <div class="comment-head">
+            <strong>{{ comment.userId }}</strong>
+            <span class="badge">{{ Number(comment.rating).toFixed(1) }}점</span>
+          </div>
           <p>{{ comment.comment }}</p>
           <button v-if="canEditComment(comment)" type="button" class="btn btn-sm btn-outline-danger" @click="removeComment(comment)">
             삭제

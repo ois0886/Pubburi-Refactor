@@ -16,6 +16,8 @@
 
 실패 응답의 `error`는 `{ "code": "", "message": "", "fields": {} }` 형태다. 목록 API의 `data`는 `PageResponse<T>`이며 `{ items, page, size, total, totalPages, hasNext }`를 가진다.
 
+인증이 필요한 API는 session cookie를 사용하며, frontend API client는 `credentials: include`를 유지한다.
+
 ## Auth And Users
 
 - `POST /api/auth/login`: 로그인
@@ -54,6 +56,10 @@
 - `PATCH /api/admin/orders/{id}/complete`: 주문 완료 처리
 - `DELETE /api/admin/orders/{id}`: 주문 삭제
 
+주문 생성 request의 `details`는 `{ productId, quantity }` 배열이다. backend는 같은 `productId`를 합산해 저장하며, `quantity <= 0` 또는 `productId <= 0`은 `BAD_REQUEST`로 처리한다.
+
+주문 응답의 `details`는 상품명, 타입, 이미지, 단가, 합계를 포함한다. 목록/상세 API 모두 같은 `OrderResponse` 형태를 유지한다.
+
 ## Markets
 
 - `GET /api/markets?page=1&size=12`: 매장 목록
@@ -67,7 +73,14 @@
 - 고객: 홈, 상품 목록, 상품 상세, 댓글, 장바구니, 주문, 로그인, 회원가입, 마이페이지, 매장
 - 관리자: 상품 CRUD, 매장 CRUD, 주문 관리, 댓글 관리, 사용자 관리
 
+## Response DTO Notes
+
+- `ProfileResponse.grade`: `{ img, step, stepMax, to, title }`.
+- `ProductResponse.img`: DB에는 기존 파일명이 남아 있을 수 있지만 frontend는 WebP path로 변환해 표시한다.
+- `OrderResponse.details`: 주문 목록에서는 batch 조회로 채워지며, endpoint 응답 형태는 이전과 같다.
+
 ## 문서 갱신 체크리스트
 
 - endpoint path, request DTO, response DTO, page 기본값이 바뀌면 이 문서를 갱신한다.
 - frontend API client를 바꾸면 관련 화면/store도 함께 확인한다.
+- API path가 그대로라도 내부 응답 필드, validation, 권한, pagination 기본값이 바뀌면 이 문서를 갱신한다.

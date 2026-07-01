@@ -3,6 +3,7 @@ package com.pubburi.pub.controller.api;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -34,5 +35,10 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException exception) {
 		return ResponseEntity.badRequest().body(ApiResponse.error(ApiError.of("BAD_REQUEST", exception.getMessage())));
+	}
+
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(DataIntegrityViolationException exception) {
+		return ResponseEntity.badRequest().body(ApiResponse.error(ApiError.of("BAD_REQUEST", "Invalid related data")));
 	}
 }

@@ -12,7 +12,7 @@
 ## 기술 스택
 
 - Backend: Spring Boot 3, MyBatis, MySQL
-- Frontend: Vue 3, Vite, Bootstrap 5
+- Frontend: Vue 3, Vite, Pinia, Vue Router
 - Local DB: Docker Compose MySQL
 
 ## 로컬 실행
@@ -46,3 +46,14 @@ cd ../pubburi-vue
 npm ci
 npm run build
 ```
+
+현재 기준 검증 결과는 backend 9 tests, frontend 10 tests, Vite build 통과입니다.
+
+## 문서
+
+- `docs/LOCAL_RUNBOOK.md`: 로컬 실행과 검증 절차
+- `docs/API-MAP.md`: `/api` endpoint와 응답 계약
+- `docs/LAYERS.md`: frontend/backend/data/runtime layer 책임
+- `docs/REFACTORING.md`: 리팩토링 변경 기록
+- `docs/PERFORMANCE-OPTIMIZATION.md`: 성능 최적화 근거와 최신 build size
+- `AGENT.md`: 작업 규칙과 유지보수 가이드

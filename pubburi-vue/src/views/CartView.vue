@@ -1,15 +1,18 @@
 <template>
   <section class="view">
     <div class="section-heading">
-      <h1>장바구니</h1>
-      <strong>{{ money(cart.total) }}원</strong>
+      <div>
+        <p class="section-kicker">Cart</p>
+        <h1>장바구니</h1>
+      </div>
+      <strong class="total-price">{{ money(cart.total) }}원</strong>
     </div>
     <div v-if="cart.items.length" class="cart-list">
       <article v-for="item in cart.items" :key="item.product.id" class="cart-row">
         <ImageWithFallback :src="productImage(item.product)" :alt="item.product.name" />
         <div>
           <strong>{{ item.product.name }}</strong>
-          <p>{{ money(item.product.price) }}원</p>
+          <p class="muted">{{ money(item.product.price) }}원</p>
         </div>
         <input v-model.number="item.quantity" type="number" min="1" class="form-control quantity-input" @change="cart.persist" />
         <button type="button" class="btn btn-outline-danger btn-sm" @click="cart.remove(item.product.id)">삭제</button>

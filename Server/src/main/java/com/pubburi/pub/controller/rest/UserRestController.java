@@ -1,12 +1,9 @@
 package com.pubburi.pub.controller.rest;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +29,7 @@ import com.pubburi.pub.controller.response.ProfileResponse;
 import com.pubburi.pub.controller.response.ResponseMapper;
 import com.pubburi.pub.controller.response.UserResponse;
 import com.pubburi.pub.model.dto.User;
+import com.pubburi.pub.model.service.GradeService;
 import com.pubburi.pub.model.service.OrderService;
 import com.pubburi.pub.model.service.UserService;
 
@@ -40,17 +38,19 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(originPatterns = { "http://localhost:*", "http://127.0.0.1:*" }, allowCredentials = "true")
 public class UserRestController {
 
 	private final UserService userService;
 	private final OrderService orderService;
 	private final AccessGuard accessGuard;
+	private final GradeService gradeService;
 
-	public UserRestController(UserService userService, OrderService orderService, AccessGuard accessGuard) {
+	public UserRestController(UserService userService, OrderService orderService, AccessGuard accessGuard,
+			GradeService gradeService) {
 		this.userService = userService;
 		this.orderService = orderService;
 		this.accessGuard = accessGuard;
+		this.gradeService = gradeService;
 	}
 
 	@PostMapping("/auth/login")
@@ -108,7 +108,8 @@ public class UserRestController {
 		}
 		List<OrderResponse> orders = orderService.getOrdersByUserId(id, PageCriteria.of(1, 10, 10)).items().stream()
 				.map(ResponseMapper::order).toList();
-		ProfileResponse profile = new ProfileResponse(ResponseMapper.user(user), orders, getGrade(user.getStamps()));
+		ProfileResponse profile = new ProfileResponse(ResponseMapper.user(user), orders,
+				gradeService.gradeFor(user.getStamps()));
 		return ResponseEntity.ok(ApiResponse.ok(profile));
 	}
 
@@ -144,28 +145,4 @@ public class UserRestController {
 		return ResponseEntity.ok(ApiResponse.ok(userService.removeUser(id) > 0));
 	}
 
-	private Map<String, Object> getGrade(Integer stamp) {
-		List<Level> levels = new ArrayList<>();
-		levels.add(new Level("", 0, 0, ""));
-		levels.add(new Level("씨앗", 10, 50, "seeds.png"));
-		levels.add(new Level("꽃", 15, 125, "flower.png"));
-		levels.add(new Level("열매", 20, 225, "coffee_fruit.png"));
-		levels.add(new Level("커피콩", 25, 350, "coffee_beans.png"));
-		levels.add(new Level("커피나무", Integer.MAX_VALUE, Integer.MAX_VALUE, "coffee_tree.png"));
-
-		int safeStamp = stamp == null ? 0 : stamp;
-		for (int i = 1; i <= 5; i++) {
-			if (safeStamp <= levels.get(i).max()) {
-				return Map.of("img", levels.get(i).img(), "step",
-						(int) Math.ceil((double) (safeStamp - levels.get(i - 1).max()) / levels.get(i).unit()),
-						"stepMax", levels.get(i).unit(), "to",
-						(levels.get(i).max() - safeStamp) % levels.get(i).unit() + 1, "title",
-						levels.get(i).title());
-			}
-		}
-		return Map.of();
-	}
-
-	private record Level(String title, int unit, int max, String img) {
-	}
 }

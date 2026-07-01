@@ -37,7 +37,13 @@ const ui = useUiStore()
 
 function refresh() {
   return ui.run(async () => {
-    await Promise.all([admin.load(), catalog.loadProducts({ page: 1, size: 20 }), catalog.loadMarkets()])
+    if (admin.tab === 'products') {
+      await catalog.loadProducts({ page: catalog.productsPage.page || 1, size: 20, type: '', q: '' })
+    } else if (admin.tab === 'markets') {
+      await catalog.loadMarkets({ page: catalog.marketsPage.page || 1 })
+    } else {
+      await admin.loadActive()
+    }
   })
 }
 </script>

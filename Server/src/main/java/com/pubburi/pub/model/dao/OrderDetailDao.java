@@ -2,6 +2,8 @@ package com.pubburi.pub.model.dao;
 
 import java.util.List;
 
+import org.apache.ibatis.annotations.Param;
+
 import com.pubburi.pub.model.dto.OrderDetail;
 
 public interface OrderDetailDao {
@@ -20,6 +22,8 @@ public interface OrderDetailDao {
 	 * @return 삽입 결과
 	 */
 	int insert(OrderDetail orderDetail);
+
+	int insertAll(@Param("details") List<OrderDetail> details);
 
 	/**
 	 * 특정 주문 ID에 해당하는 상세 주문을 삭제한다.

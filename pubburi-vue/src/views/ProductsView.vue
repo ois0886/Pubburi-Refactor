@@ -1,5 +1,12 @@
 <template>
   <section class="view">
+    <div class="section-heading">
+      <div>
+        <p class="section-kicker">Shop</p>
+        <h1>전통주 둘러보기</h1>
+      </div>
+      <span class="muted">총 {{ catalog.productsPage.total }}개</span>
+    </div>
     <div class="toolbar">
       <select v-model="catalog.filters.type" class="form-select" @change="loadPage(1)">
         <option value="">전체 주종</option>
