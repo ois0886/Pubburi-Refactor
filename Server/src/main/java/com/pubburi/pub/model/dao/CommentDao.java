@@ -2,6 +2,8 @@ package com.pubburi.pub.model.dao;
 
 import java.util.List;
 
+import org.apache.ibatis.annotations.Param;
+
 import com.pubburi.pub.model.dto.Comment;
 
 public interface CommentDao {
@@ -13,7 +15,16 @@ public interface CommentDao {
 	 */
 	List<Comment> selectByProductId(int productId);
 
+	List<Comment> selectByProductIdPaged(@Param("productId") int productId, @Param("limit") int limit,
+			@Param("offset") int offset);
+
+	int countByProductId(int productId);
+
 	List<Comment> selectAll();
+
+	List<Comment> selectAllPaged(@Param("limit") int limit, @Param("offset") int offset);
+
+	int countAll();
 
 	/**
 	 * 리뷰를 등록한다.

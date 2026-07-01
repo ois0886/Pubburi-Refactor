@@ -2,6 +2,8 @@ package com.pubburi.pub.model.service;
 
 import java.util.List;
 
+import com.pubburi.pub.controller.api.PageCriteria;
+import com.pubburi.pub.controller.api.PageResponse;
 import com.pubburi.pub.model.dto.Product;
 
 public interface ProductService {
@@ -13,7 +15,7 @@ public interface ProductService {
 	 */
 	List<Product> getProductList();
 
-	List<Product> searchProducts(String type, String q, String sort);
+	PageResponse<Product> searchProducts(String type, String q, String sort, PageCriteria criteria);
 
 	/**
 	 * 주어진 ID에 해당하는 상품을 조회한다.

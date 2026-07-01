@@ -2,6 +2,8 @@ package com.pubburi.pub.model.dao;
 
 import java.util.List;
 
+import org.apache.ibatis.annotations.Param;
+
 import com.pubburi.pub.model.dto.Order;
 import com.pubburi.pub.model.dto.OrderDetailInfo;
 import com.pubburi.pub.model.dto.OrderInfo;
@@ -66,7 +68,16 @@ public interface OrderDao {
 
 	List<OrderInfo> selectOrderInfoListByUserId(String userId);
 
+	List<OrderInfo> selectOrderInfoPageByUserId(@Param("userId") String userId, @Param("limit") int limit,
+			@Param("offset") int offset);
+
+	int countOrderInfoByUserId(String userId);
+
 	List<OrderInfo> selectAllOrderInfo();
+
+	List<OrderInfo> selectAllOrderInfoPaged(@Param("limit") int limit, @Param("offset") int offset);
+
+	int countAllOrderInfo();
 
 	/**
 	 * 사용자가 주문한 최근 1개월의 주문 주문번호 내림차순으로 조회된다. 주문번호의 상세내용은 detail id의 오름차순으로 조회된다. 관통

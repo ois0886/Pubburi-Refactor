@@ -1,5 +1,26 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api'
 
+export class ApiClientError extends Error {
+  constructor(error, status) {
+    super(error?.message || 'Request failed')
+    this.name = 'ApiClientError'
+    this.status = status
+    this.code = error?.code || 'REQUEST_FAILED'
+    this.fields = error?.fields || {}
+  }
+}
+
+export function pageQuery(params = {}, defaults = {}) {
+  const query = new URLSearchParams()
+  const merged = { ...defaults, ...params }
+  Object.entries(merged).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      query.set(key, value)
+    }
+  })
+  return query.toString()
+}
+
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
@@ -10,19 +31,16 @@ async function request(path, options = {}) {
     ...options,
   })
 
-  if (response.status === 204) {
-    return null
-  }
-
   const text = await response.text()
-  const data = text ? JSON.parse(text) : null
+  const envelope = text ? JSON.parse(text) : null
+  const hasEnvelope = envelope && Object.prototype.hasOwnProperty.call(envelope, 'data')
 
-  if (!response.ok) {
-    const message = data?.message || response.statusText || 'Request failed'
-    throw new Error(message)
+  if (!response.ok || envelope?.error) {
+    const error = envelope?.error || { code: response.statusText, message: response.statusText }
+    throw new ApiClientError(error, response.status)
   }
 
-  return data
+  return hasEnvelope ? envelope.data : envelope
 }
 
 export const api = {
@@ -33,29 +51,33 @@ export const api = {
   idAvailable: (id) => request(`/users/id-available?id=${encodeURIComponent(id)}`),
   profile: (id) => request(`/users/${encodeURIComponent(id)}/profile`),
 
-  products: (params = {}) => request(`/products?${new URLSearchParams(params)}`),
+  products: (params = {}) => request(`/products?${pageQuery(params, { page: 1, size: 12 })}`),
   popularProducts: () => request('/products/popular'),
   product: (id) => request(`/products/${id}`),
   createProduct: (payload) => request('/admin/products', { method: 'POST', body: JSON.stringify(payload) }),
   updateProduct: (id, payload) => request(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deleteProduct: (id) => request(`/admin/products/${id}`, { method: 'DELETE' }),
 
-  comments: (productId) => request(`/products/${productId}/comments`),
+  comments: (productId, params = {}) =>
+    request(`/products/${productId}/comments?${pageQuery(params, { page: 1, size: 10 })}`),
   createComment: (payload) => request('/comments', { method: 'POST', body: JSON.stringify(payload) }),
   updateComment: (id, payload) => request(`/comments/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deleteComment: (id) => request(`/comments/${id}`, { method: 'DELETE' }),
-  adminComments: () => request('/admin/comments'),
+  adminComments: (params = {}) => request(`/admin/comments?${pageQuery(params, { page: 1, size: 20 })}`),
 
-  markets: () => request('/markets'),
+  markets: (params = {}) => request(`/markets?${pageQuery(params, { page: 1, size: 12 })}`),
   createMarket: (payload) => request('/admin/markets', { method: 'POST', body: JSON.stringify(payload) }),
   updateMarket: (id, payload) => request(`/admin/markets/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deleteMarket: (id) => request(`/admin/markets/${id}`, { method: 'DELETE' }),
 
   createOrder: (payload) => request('/orders', { method: 'POST', body: JSON.stringify(payload) }),
-  userOrders: (userId) => request(`/users/${encodeURIComponent(userId)}/orders`),
-  adminOrders: () => request('/admin/orders'),
+  userOrders: (userId, params = {}) =>
+    request(`/users/${encodeURIComponent(userId)}/orders?${pageQuery(params, { page: 1, size: 10 })}`),
+  adminOrders: (params = {}) => request(`/admin/orders?${pageQuery(params, { page: 1, size: 20 })}`),
   completeOrder: (id) => request(`/admin/orders/${id}/complete`, { method: 'PATCH' }),
   deleteOrder: (id) => request(`/admin/orders/${id}`, { method: 'DELETE' }),
 
-  adminUsers: () => request('/admin/users'),
+  adminUsers: (params = {}) => request(`/admin/users?${pageQuery(params, { page: 1, size: 20 })}`),
+  updateUser: (id, payload) => request(`/admin/users/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteUser: (id) => request(`/admin/users/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 }

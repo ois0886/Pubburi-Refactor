@@ -2,6 +2,7 @@ package com.pubburi.pub.controller.rest;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,57 +14,93 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
+import com.pubburi.pub.controller.api.ApiResponse;
+import com.pubburi.pub.controller.api.PageCriteria;
+import com.pubburi.pub.controller.api.PageResponse;
+import com.pubburi.pub.controller.auth.AccessGuard;
+import com.pubburi.pub.controller.request.ProductRequest;
+import com.pubburi.pub.controller.response.ProductResponse;
+import com.pubburi.pub.controller.response.ResponseMapper;
 import com.pubburi.pub.model.dto.Product;
 import com.pubburi.pub.model.service.ProductService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(originPatterns = { "http://localhost:*", "http://127.0.0.1:*" }, allowCredentials = "true")
-public class ProductRestController extends SessionSupport {
+public class ProductRestController {
 
 	private final ProductService productService;
+	private final AccessGuard accessGuard;
 
-	public ProductRestController(ProductService productService) {
+	public ProductRestController(ProductService productService, AccessGuard accessGuard) {
 		this.productService = productService;
+		this.accessGuard = accessGuard;
 	}
 
 	@GetMapping("/products")
-	public ResponseEntity<List<Product>> products(@RequestParam(required = false) String type,
-			@RequestParam(required = false) String q, @RequestParam(defaultValue = "popular") String sort) {
-		return ResponseEntity.ok(productService.searchProducts(type, q, sort));
+	public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> products(@RequestParam(required = false) String type,
+			@RequestParam(required = false) String q, @RequestParam(defaultValue = "popular") String sort,
+			@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+		PageResponse<ProductResponse> products = productService.searchProducts(type, q, sort,
+				PageCriteria.of(page, size, 12)).map(ResponseMapper::product);
+		return ResponseEntity.ok(ApiResponse.ok(products));
 	}
 
 	@GetMapping("/products/popular")
-	public ResponseEntity<List<Product>> popularProducts() {
-		return ResponseEntity.ok(productService.getPopularProducts());
+	public ResponseEntity<ApiResponse<List<ProductResponse>>> popularProducts() {
+		List<ProductResponse> products = productService.getPopularProducts().stream().map(ResponseMapper::product)
+				.toList();
+		return ResponseEntity.ok(ApiResponse.ok(products));
 	}
 
 	@GetMapping("/products/{id}")
-	public ResponseEntity<Product> product(@PathVariable int id) {
+	public ResponseEntity<ApiResponse<ProductResponse>> product(@PathVariable int id) {
 		Product product = productService.getProductById(id);
-		return product == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(product);
+		if (product == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
+		}
+		return ResponseEntity.ok(ApiResponse.ok(ResponseMapper.product(product)));
 	}
 
 	@PostMapping("/admin/products")
-	public ResponseEntity<Boolean> addProduct(@RequestBody Product product, HttpSession session) {
-		requireAdmin(session);
-		return ResponseEntity.ok(productService.addProduct(product) > 0);
+	public ResponseEntity<ApiResponse<ProductResponse>> addProduct(@Valid @RequestBody ProductRequest request,
+			HttpSession session) {
+		accessGuard.requireAdmin(session);
+		Product product = toProduct(request);
+		if (productService.addProduct(product) <= 0) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product could not be created");
+		}
+		return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.message(ResponseMapper.product(product), "created"));
 	}
 
 	@PutMapping("/admin/products/{id}")
-	public ResponseEntity<Boolean> updateProduct(@PathVariable int id, @RequestBody Product product,
-			HttpSession session) {
-		requireAdmin(session);
+	public ResponseEntity<ApiResponse<Boolean>> updateProduct(@PathVariable int id,
+			@Valid @RequestBody ProductRequest request, HttpSession session) {
+		accessGuard.requireAdmin(session);
+		Product product = toProduct(request);
 		product.setId(id);
-		return ResponseEntity.ok(productService.updateProduct(product) > 0);
+		return ResponseEntity.ok(ApiResponse.ok(productService.updateProduct(product) > 0));
 	}
 
 	@DeleteMapping("/admin/products/{id}")
-	public ResponseEntity<Boolean> deleteProduct(@PathVariable int id, HttpSession session) {
-		requireAdmin(session);
-		return ResponseEntity.ok(productService.removeProduct(id) > 0);
+	public ResponseEntity<ApiResponse<Boolean>> deleteProduct(@PathVariable int id, HttpSession session) {
+		accessGuard.requireAdmin(session);
+		return ResponseEntity.ok(ApiResponse.ok(productService.removeProduct(id) > 0));
+	}
+
+	private Product toProduct(ProductRequest request) {
+		Product product = new Product();
+		product.setName(request.name());
+		product.setType(request.type());
+		product.setPrice(request.price());
+		product.setImg(request.img());
+		product.setAbv(request.abv());
+		product.setOrderCount(request.orderCount());
+		return product;
 	}
 }

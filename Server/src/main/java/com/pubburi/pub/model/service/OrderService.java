@@ -2,6 +2,8 @@ package com.pubburi.pub.model.service;
 
 import java.util.List;
 
+import com.pubburi.pub.controller.api.PageCriteria;
+import com.pubburi.pub.controller.api.PageResponse;
 import com.pubburi.pub.model.dto.Order;
 import com.pubburi.pub.model.dto.OrderDetail;
 import com.pubburi.pub.model.dto.OrderInfo;
@@ -24,7 +26,11 @@ public interface OrderService {
 	 */
 	List<OrderInfo> getOrdersByUserId(String userId);
 
+	PageResponse<OrderInfo> getOrdersByUserId(String userId, PageCriteria criteria);
+
 	List<OrderInfo> getAllOrders();
+
+	PageResponse<OrderInfo> getAllOrders(PageCriteria criteria);
 
 	/**
 	 * 특정 주문 ID로 주문을 조회한다.

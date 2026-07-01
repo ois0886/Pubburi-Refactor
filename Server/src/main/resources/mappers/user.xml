@@ -11,6 +11,18 @@
         ORDER BY id
     </select>
 
+    <select id="selectPaged" resultType="User">
+        SELECT id, name, password_hash AS pass, stamps, role
+        FROM t_user
+        ORDER BY id
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*)
+        FROM t_user
+    </select>
+
     <insert id="insert" parameterType="User">
         INSERT INTO t_user (id, name, password_hash, stamps, role)
         VALUES (#{id}, #{name}, #{pass}, COALESCE(#{stamps}, 0), #{role})
@@ -22,6 +34,12 @@
             password_hash = #{pass},
             stamps = #{stamps},
             role = #{role}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE t_user
+        SET password_hash = #{pass}
         WHERE id = #{id}
     </update>
 

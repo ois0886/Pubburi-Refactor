@@ -15,7 +15,7 @@
 1. `git status --short --branch`로 시작 상태를 확인한다.
 2. 관련 layer와 문서를 먼저 읽고 변경 범위를 정한다.
 3. 코드는 기존 Spring Boot, MyBatis, Vue 패턴을 우선한다.
-4. 검증은 최소 `./mvnw test`, `npm ci`, `npm run build`, 민감정보 패턴 스캔을 수행한다.
+4. 검증은 최소 `./mvnw test`, `npm run test`, `npm run build`, 민감정보 패턴 스캔을 수행한다.
 5. 문서를 갱신한다.
 6. Conventional Commit 형식으로 커밋하고 푸시한다.
 7. 민감정보가 Git 기록에 들어간 경우 새 root commit으로 히스토리를 정리한 뒤 force-with-lease로 푸시한다.
@@ -25,14 +25,14 @@
 ### backend-agent
 
 - 담당: Spring Boot controller, service, DAO, MyBatis mapper, session 기반 인증 흐름.
-- 확인: `/api` prefix 유지, controller는 thin하게 유지, service에서 트랜잭션과 핵심 규칙 처리.
+- 확인: `/api` prefix, `ApiResponse`, request validation, `AccessGuard`, service transaction 경계를 유지한다.
 - 검증: `cd Server && ./mvnw test`.
 
 ### frontend-agent
 
 - 담당: Vue 화면, API client, 장바구니, 관리자 화면, 반응형 UI.
-- 확인: `src/services/api.js`를 통해 백엔드와 연결하고, 화면별 상태와 에러 메시지를 정리한다.
-- 검증: `cd pubburi-vue && npm ci && npm run build`.
+- 확인: Router view, Pinia store, `src/services/api.js`, 공통 컴포넌트 경계를 유지한다.
+- 검증: `cd pubburi-vue && npm run test && npm run build`.
 
 ### data-agent
 

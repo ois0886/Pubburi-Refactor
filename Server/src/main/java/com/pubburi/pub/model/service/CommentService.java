@@ -2,6 +2,8 @@ package com.pubburi.pub.model.service;
 
 import java.util.List;
 
+import com.pubburi.pub.controller.api.PageCriteria;
+import com.pubburi.pub.controller.api.PageResponse;
 import com.pubburi.pub.model.dto.Comment;
 
 public interface CommentService {
@@ -14,7 +16,11 @@ public interface CommentService {
 	 */
 	List<Comment> getCommentsByProductId(int productId);
 
+	PageResponse<Comment> getCommentsByProductId(int productId, PageCriteria criteria);
+
 	List<Comment> getAllComments();
+
+	PageResponse<Comment> getAllComments(PageCriteria criteria);
 
 	/**
 	 * 리뷰를 등록한다.

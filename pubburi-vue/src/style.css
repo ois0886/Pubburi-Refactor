@@ -21,7 +21,8 @@ body {
 
 button,
 input,
-select {
+select,
+a {
   font: inherit;
 }
 
@@ -54,8 +55,10 @@ select {
   font-weight: 800;
   background: transparent;
   border: 0;
+  text-decoration: none;
 }
 
+.brand picture,
 .brand img {
   width: 46px;
   height: 46px;
@@ -78,17 +81,23 @@ select {
 }
 
 .nav-actions button,
+.nav-actions a,
 .admin-tabs button,
 .segmented button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 36px;
   padding: 6px 12px;
   color: #374151;
   background: #fff;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+  text-decoration: none;
 }
 
 .nav-actions button.active,
+.nav-actions a.router-link-active,
 .admin-tabs button.active,
 .segmented button.active {
   color: #fff;
@@ -142,6 +151,16 @@ main {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.hero-carousel picture,
+.product-image picture,
+.detail-media picture,
+.cart-row picture,
+.category-strip picture {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .section-band {
@@ -217,6 +236,13 @@ main {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.pagination-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
 }
 
 .product-body {

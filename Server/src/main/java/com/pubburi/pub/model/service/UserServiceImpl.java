@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.pubburi.pub.controller.api.PageCriteria;
+import com.pubburi.pub.controller.api.PageResponse;
 import com.pubburi.pub.model.dao.UserDao;
 import com.pubburi.pub.model.dto.User;
 
@@ -21,6 +23,13 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public List<User> getUserList() {
 		return userDao.selectAll().stream().map(User::withoutPass).toList();
+	}
+
+	@Override
+	public PageResponse<User> getUserPage(PageCriteria criteria) {
+		List<User> users = userDao.selectPaged(criteria.size(), criteria.offset()).stream().map(User::withoutPass)
+				.toList();
+		return PageResponse.of(users, criteria, userDao.countAll());
 	}
 
 	@Override
@@ -91,6 +100,9 @@ public class UserServiceImpl implements UserService {
 		User stored = userDao.selectById(user.getId());
 		if (stored == null || !passwordHasher.matches(user.getPass(), stored.getPass())) {
 			return null;
+		}
+		if (passwordHasher.needsUpgrade(stored.getPass())) {
+			userDao.updatePassword(stored.getId(), passwordHasher.hash(user.getPass()));
 		}
 		return stored.withoutPass();
 	}

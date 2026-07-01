@@ -5,18 +5,18 @@ SET NAMES utf8mb4;
 CREATE TABLE t_user (
     id VARCHAR(100) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    password_hash CHAR(64) NOT NULL,
+    password_hash VARCHAR(100) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'USER',
     stamps INT NOT NULL DEFAULT 0
 );
 
 INSERT INTO t_user (id, name, password_hash, role, stamps) VALUES
-('admin', '관리자', 'ac9689e2272427085e35b9d3e3e8bed88cb3434828b43b86fc0596cad4c6e270', 'ADMIN', 0),
-('id01', '홍길동', 'fa66ed652b77f7a4bbc9e07201ea3e37cdef4e8e130890b137aa5f55a65af1d0', 'USER', 5),
-('id02', '이순신', 'c4f7128356088f8e74c41aa91d415f173b83167480ee47129be8253e77d722a2', 'USER', 2),
-('id03', '김유신', '3f775524adec11728ffaebc0310cfe2588aa8f6e47eedc9923f33147a15a42ef', 'USER', 7),
-('id04', '강감찬', '705708610ee2c13dab594519bc4055253e22795dbeb84d836648daf54122dd7b', 'USER', 1),
-('id05', '신사임당', 'b783eb8079ce216a8f18bc5bd244353f5e8262996577ad3568b20342daf7df06', 'USER', 3);
+('admin', '관리자', '$2y$10$P2jZKcx4Z66jff6TPxEsTO8JQgOycI8Jp/j1OVOS6pVzeOw3Iee/.', 'ADMIN', 0),
+('id01', '홍길동', '$2y$10$786lYHcZi9Rn1vhrznqTUeNbjK3xssSaWUoi6bf4M9vXzFxYDgPwm', 'USER', 5),
+('id02', '이순신', '$2y$10$1lbGqt87pETZ2TGxPxEPRe4s0xPZD6k349JAMEBc9IKk/8nP3Gtwm', 'USER', 2),
+('id03', '김유신', '$2y$10$Typye3dxHHSn3ADVSRcp7ehHWYpaNpfg5RddjZEmIsHivhG7n.RH2', 'USER', 7),
+('id04', '강감찬', '$2y$10$cpCgAO5h1EsNJ08IZK.gbOvzSCl.Q7AjWOda9g.N6Bbmb37NjacQ2', 'USER', 1),
+('id05', '신사임당', '$2y$10$HhwLCRKy73Pz5BpedbN8ge9ON3gURMVr5GbdmMT472nKQpakrx.IK', 'USER', 3);
 
 -- 술 상품 테이블
 CREATE TABLE t_product (

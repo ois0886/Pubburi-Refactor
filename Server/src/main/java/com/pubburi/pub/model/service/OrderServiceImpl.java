@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.pubburi.pub.controller.api.PageCriteria;
+import com.pubburi.pub.controller.api.PageResponse;
 import com.pubburi.pub.model.dao.OrderDao;
 import com.pubburi.pub.model.dao.OrderDetailDao;
 import com.pubburi.pub.model.dao.ProductDao;
@@ -78,8 +80,23 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+	public PageResponse<OrderInfo> getOrdersByUserId(String userId, PageCriteria criteria) {
+		if (isBlank(userId)) {
+			return PageResponse.of(List.of(), criteria, 0);
+		}
+		List<OrderInfo> orders = orderDao.selectOrderInfoPageByUserId(userId, criteria.size(), criteria.offset());
+		return PageResponse.of(orders, criteria, orderDao.countOrderInfoByUserId(userId));
+	}
+
+	@Override
 	public List<OrderInfo> getAllOrders() {
 		return orderDao.selectAllOrderInfo();
+	}
+
+	@Override
+	public PageResponse<OrderInfo> getAllOrders(PageCriteria criteria) {
+		List<OrderInfo> orders = orderDao.selectAllOrderInfoPaged(criteria.size(), criteria.offset());
+		return PageResponse.of(orders, criteria, orderDao.countAllOrderInfo());
 	}
 
 	@Override

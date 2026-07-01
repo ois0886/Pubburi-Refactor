@@ -2,50 +2,48 @@
 
 주전부리(Pubburi) 리팩토링 중 수행한 성능 관련 변경과 확인 결과를 기록한다.
 
-## 2026-07-01 리팩토링 기준
+## 2026-07-01 Optimization Pass
 
-### Dependency Pruning
+### Backend
 
-- Backend에서 사용하지 않는 외부 AI, 푸시, WAR 배포 관련 의존성을 제거했다.
-- Frontend에서 사용하지 않는 패키지를 제거하고 Vue, Vite, Bootstrap 중심으로 축소했다.
-- `npm ci` 기준 37개 패키지 audit 결과 취약점 0건을 확인했다.
+- BCrypt 기반 `PasswordHasher`를 적용하고 legacy SHA-256 검증/자동 전환 로직을 추가했다.
+- request DTO와 Bean Validation을 적용해 controller 진입점에서 잘못된 입력을 빠르게 차단한다.
+- 모든 API 응답을 `ApiResponse`로 통일해 frontend error handling 분기를 줄였다.
+- 상품, 댓글, 주문, 매장, 관리자 사용자 목록에 `page/size` pagination과 count query를 추가했다.
+- session에는 `SessionUser`만 저장해 내부 비밀번호 필드가 view/API 응답으로 새는 위험을 줄였다.
 
-### Database Query And Index
+### Frontend
 
-- 상품 목록은 SQL에서 카테고리, 검색어, 정렬을 처리하도록 정리했다.
-- 인기 상품은 주문 수 기준 제한 목록으로 조회한다.
-- 주문 상세는 주문과 상품 정보를 join해 화면에 필요한 값을 한 번에 가져온다.
-- 추가 index:
-  - `idx_product_type`
-  - `idx_product_order_count`
-  - `idx_order_user_time`
-  - `idx_order_detail_order`
-  - `idx_order_detail_product`
-  - `idx_comment_product`
+- Vue Router로 화면을 route 단위로 나누고, Pinia store로 인증/장바구니/카탈로그/관리자 상태를 분리했다.
+- API client가 공통 응답 wrapper를 unwrap하고 page query를 생성해 화면별 중복 fetch 코드를 줄였다.
+- `ImageWithFallback` 컴포넌트는 WebP source와 원본 PNG fallback을 함께 사용한다.
+- `App.vue`는 shell 중심으로 축소하고 실제 화면은 `views`와 `components`로 분리했다.
 
-### API Surface
+### Image Assets
 
-- 모든 endpoint를 `/api` 아래로 통일해 frontend proxy와 호출 경로를 단순화했다.
-- API client를 `src/services/api.js`로 통합해 중복 fetch 옵션과 error handling을 줄였다.
-- 사용하지 않는 채팅, 추천, 푸시 화면과 호출 흐름을 제거해 불필요한 네트워크 경로를 없앴다.
+- `scripts/optimize-images.mjs`로 PNG/JPG 96개를 WebP로 생성했다.
+- 대상 원본 합계: 60,003,601 bytes.
+- 생성 WebP 합계: 2,924,062 bytes.
+- 산술상 약 95% 감소했고, 원본 PNG는 fallback으로 유지한다.
 
-### Frontend Build
+### Verification Snapshot
 
-- Vite production build 확인 결과:
-  - CSS: 약 236 KB
-  - JS: 약 168 KB
-  - build time: 약 0.6초
-- 장바구니는 localStorage에 저장해 새로고침 후에도 로컬 상태를 유지한다.
+- Backend: `./mvnw test` 통과, 5 tests.
+- Frontend: `npm run test` 통과, 6 tests.
+- Frontend build: `npm run build` 통과.
+- Build output:
+  - CSS: 236.63 KB, gzip 32.65 KB.
+  - JS: 207.00 KB, gzip 69.71 KB.
+  - build time: 약 1초.
 
-### Backend Test
+## 문서 갱신 체크리스트
 
-- `./mvnw test` 기준 context 없는 기본 애플리케이션 로딩 테스트를 통과했다.
-- MyBatis mapper와 실제 DB 연동 검증은 Docker MySQL을 띄운 수동 smoke test로 확인했다.
+- API page size, query, response wrapper가 바뀌면 `docs/API-MAP.md`와 이 문서를 같이 갱신한다.
+- 이미지 최적화 기준이나 산출 용량이 바뀌면 이 문서의 Image Assets 섹션을 갱신한다.
+- 테스트 수나 build size가 크게 바뀌면 Verification Snapshot을 갱신한다.
 
 ## 다음 최적화 후보
 
-- 비밀번호 해시는 운영 수준 알고리즘으로 교체한다.
-- 관리자 목록 API에 pagination을 추가한다.
-- 상품 이미지는 용량이 큰 배너부터 WebP 또는 리사이즈 자산으로 교체한다.
-- 댓글과 주문 목록은 페이지 단위 조회로 확장한다.
-- frontend 화면을 route 단위로 나누어 code splitting을 적용한다.
+- 관리자 화면의 탭별 데이터 로딩을 현재 선택 탭 중심으로 더 줄인다.
+- 상품 목록 쿼리에 검색어 빈도와 실제 사용 패턴을 기준으로 추가 index를 검토한다.
+- 이미지 품질을 화면별로 비교해 WebP quality와 resize width를 세분화한다.

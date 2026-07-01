@@ -17,6 +17,23 @@
         ORDER BY id
     </select>
 
+    <select id="selectPaged" resultType="Market">
+        SELECT
+            id,
+            name,
+            lat AS latitude,
+            lng AS longitude,
+            img AS image
+        FROM t_market
+        ORDER BY id
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*)
+        FROM t_market
+    </select>
+
     <!-- ID로 마켓 조회 -->
     <select id="selectById" parameterType="int" resultType="Market">
         SELECT

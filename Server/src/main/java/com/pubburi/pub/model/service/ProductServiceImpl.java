@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.pubburi.pub.controller.api.PageCriteria;
+import com.pubburi.pub.controller.api.PageResponse;
 import com.pubburi.pub.model.dao.ProductDao;
 import com.pubburi.pub.model.dto.Product;
 
@@ -21,8 +23,12 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
-	public List<Product> searchProducts(String type, String q, String sort) {
-		return productDao.selectFiltered(blankToNull(type), blankToNull(q), blankToNull(sort));
+	public PageResponse<Product> searchProducts(String type, String q, String sort, PageCriteria criteria) {
+		String safeType = blankToNull(type);
+		String safeQ = blankToNull(q);
+		List<Product> products = productDao.selectFiltered(safeType, safeQ, blankToNull(sort), criteria.size(),
+				criteria.offset());
+		return PageResponse.of(products, criteria, productDao.countFiltered(safeType, safeQ));
 	}
 
 	@Override

@@ -28,19 +28,14 @@ docker compose up -d db
 ## Start Backend
 
 ```bash
-cd Server
-set -a
-source ../.env
-set +a
-./mvnw spring-boot:run
+scripts/dev-backend.sh
 ```
 
 ## Start Frontend
 
 ```bash
-cd pubburi-vue
 npm ci
-npm run dev
+scripts/dev-frontend.sh
 ```
 
 ## Stop Local Runtime
@@ -54,9 +49,7 @@ docker compose down
 ## Validation
 
 ```bash
-cd Server
-./mvnw test
-cd ../pubburi-vue
-npm ci
-npm run build
+scripts/check.sh
 ```
+
+개별 확인이 필요하면 `cd Server && ./mvnw test`, `cd pubburi-vue && npm run test && npm run build`를 실행한다.

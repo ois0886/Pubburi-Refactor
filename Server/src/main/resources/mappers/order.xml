@@ -63,10 +63,36 @@
         ORDER BY o_id DESC
     </select>
 
+    <select id="selectOrderInfoPageByUserId" resultMap="orderInfoMap">
+        SELECT o_id, user_id, order_type, order_table, order_time, completed
+        FROM t_order
+        WHERE user_id = #{userId}
+        ORDER BY o_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countOrderInfoByUserId" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+        FROM t_order
+        WHERE user_id = #{userId}
+    </select>
+
     <select id="selectAllOrderInfo" resultMap="orderInfoMap">
         SELECT o_id, user_id, order_type, order_table, order_time, completed
         FROM t_order
         ORDER BY o_id DESC
+    </select>
+
+    <select id="selectAllOrderInfoPaged" resultMap="orderInfoMap">
+        SELECT o_id, user_id, order_type, order_table, order_time, completed
+        FROM t_order
+        ORDER BY o_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAllOrderInfo" resultType="int">
+        SELECT COUNT(*)
+        FROM t_order
     </select>
 
 	<select id="getLastMonthOrder" parameterType="string" resultMap="orderInfoMap">

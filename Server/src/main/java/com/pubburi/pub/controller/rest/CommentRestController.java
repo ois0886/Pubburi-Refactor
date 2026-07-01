@@ -1,10 +1,7 @@
 package com.pubburi.pub.controller.rest;
 
-import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,65 +10,95 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
+import com.pubburi.pub.controller.api.ApiResponse;
+import com.pubburi.pub.controller.api.PageCriteria;
+import com.pubburi.pub.controller.api.PageResponse;
+import com.pubburi.pub.controller.auth.AccessGuard;
+import com.pubburi.pub.controller.auth.SessionUser;
+import com.pubburi.pub.controller.request.CommentCreateRequest;
+import com.pubburi.pub.controller.request.CommentUpdateRequest;
+import com.pubburi.pub.controller.response.CommentResponse;
+import com.pubburi.pub.controller.response.ResponseMapper;
 import com.pubburi.pub.model.dto.Comment;
-import com.pubburi.pub.model.dto.User;
 import com.pubburi.pub.model.service.CommentService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(originPatterns = { "http://localhost:*", "http://127.0.0.1:*" }, allowCredentials = "true")
-public class CommentRestController extends SessionSupport {
+public class CommentRestController {
 
 	private final CommentService commentService;
+	private final AccessGuard accessGuard;
 
-	public CommentRestController(CommentService commentService) {
+	public CommentRestController(CommentService commentService, AccessGuard accessGuard) {
 		this.commentService = commentService;
+		this.accessGuard = accessGuard;
 	}
 
 	@GetMapping("/products/{productId}/comments")
-	public ResponseEntity<List<Comment>> comments(@PathVariable int productId) {
-		return ResponseEntity.ok(commentService.getCommentsByProductId(productId));
+	public ResponseEntity<ApiResponse<PageResponse<CommentResponse>>> comments(@PathVariable int productId,
+			@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+		PageResponse<CommentResponse> comments = commentService
+				.getCommentsByProductId(productId, PageCriteria.of(page, size, 10)).map(ResponseMapper::comment);
+		return ResponseEntity.ok(ApiResponse.ok(comments));
 	}
 
 	@PostMapping("/comments")
-	public ResponseEntity<Integer> addComment(@RequestBody Comment comment, HttpSession session) {
-		User user = requireLogin(session);
-		if (comment.getUserId() == null || comment.getUserId().isBlank()) {
-			comment.setUserId(user.getId());
+	public ResponseEntity<ApiResponse<CommentResponse>> addComment(@Valid @RequestBody CommentCreateRequest request,
+			HttpSession session) {
+		SessionUser user = accessGuard.requireLogin(session);
+		Comment comment = new Comment();
+		comment.setUserId(user.id());
+		comment.setProductId(request.productId());
+		comment.setRating(request.rating());
+		comment.setComment(request.comment());
+		if (commentService.addComment(comment) <= 0) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment could not be created");
 		}
-		requireSelfOrAdmin(session, comment.getUserId());
-		return ResponseEntity.ok(commentService.addComment(comment));
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(ApiResponse.message(ResponseMapper.comment(comment), "created"));
 	}
 
 	@PutMapping("/comments/{id}")
-	public ResponseEntity<Integer> updateComment(@PathVariable int id, @RequestBody Comment comment,
-			HttpSession session) {
-		Comment existing = commentService.getCommentById(id);
-		if (existing == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found");
-		}
-		requireSelfOrAdmin(session, existing.getUserId());
-		comment.setId(id);
-		return ResponseEntity.ok(commentService.updateComment(comment));
+	public ResponseEntity<ApiResponse<CommentResponse>> updateComment(@PathVariable int id,
+			@Valid @RequestBody CommentUpdateRequest request, HttpSession session) {
+		Comment existing = findComment(id);
+		accessGuard.requireSelfOrAdmin(session, existing.getUserId());
+		existing.setRating(request.rating());
+		existing.setComment(request.comment());
+		commentService.updateComment(existing);
+		return ResponseEntity.ok(ApiResponse.ok(ResponseMapper.comment(existing)));
 	}
 
 	@DeleteMapping("/comments/{id}")
-	public ResponseEntity<Integer> deleteComment(@PathVariable int id, HttpSession session) {
+	public ResponseEntity<ApiResponse<Boolean>> deleteComment(@PathVariable int id, HttpSession session) {
+		Comment existing = findComment(id);
+		accessGuard.requireSelfOrAdmin(session, existing.getUserId());
+		return ResponseEntity.ok(ApiResponse.ok(commentService.removeComment(id) > 0));
+	}
+
+	@GetMapping("/admin/comments")
+	public ResponseEntity<ApiResponse<PageResponse<CommentResponse>>> allComments(
+			@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size,
+			HttpSession session) {
+		accessGuard.requireAdmin(session);
+		PageResponse<CommentResponse> comments = commentService.getAllComments(PageCriteria.of(page, size, 20))
+				.map(ResponseMapper::comment);
+		return ResponseEntity.ok(ApiResponse.ok(comments));
+	}
+
+	private Comment findComment(int id) {
 		Comment existing = commentService.getCommentById(id);
 		if (existing == null) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found");
 		}
-		requireSelfOrAdmin(session, existing.getUserId());
-		return ResponseEntity.ok(commentService.removeComment(id));
-	}
-
-	@GetMapping("/admin/comments")
-	public ResponseEntity<List<Comment>> allComments(HttpSession session) {
-		requireAdmin(session);
-		return ResponseEntity.ok(commentService.getAllComments());
+		return existing;
 	}
 }

@@ -15,7 +15,10 @@ public interface ProductDao {
 	 */
 	List<Product> selectAll();
 
-	List<Product> selectFiltered(@Param("type") String type, @Param("q") String q, @Param("sort") String sort);
+	List<Product> selectFiltered(@Param("type") String type, @Param("q") String q, @Param("sort") String sort,
+			@Param("limit") int limit, @Param("offset") int offset);
+
+	int countFiltered(@Param("type") String type, @Param("q") String q);
 
 	/**
 	 * 주어진 ID에 해당하는 상품을 조회한다.

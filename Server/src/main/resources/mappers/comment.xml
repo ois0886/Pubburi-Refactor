@@ -10,10 +10,36 @@
         ORDER BY id DESC
     </select>
 
+    <select id="selectByProductIdPaged" resultType="Comment">
+        SELECT id, user_id, product_id, rating, comment
+        FROM t_comment
+        WHERE product_id = #{productId}
+        ORDER BY id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByProductId" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+        FROM t_comment
+        WHERE product_id = #{productId}
+    </select>
+
     <select id="selectAll" resultType="Comment">
         SELECT id, user_id, product_id, rating, comment
         FROM t_comment
         ORDER BY id DESC
+    </select>
+
+    <select id="selectAllPaged" resultType="Comment">
+        SELECT id, user_id, product_id, rating, comment
+        FROM t_comment
+        ORDER BY id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*)
+        FROM t_comment
     </select>
 
     <insert id="insert" parameterType="Comment" useGeneratedKeys="true" keyProperty="id">

@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.pubburi.pub.controller.api.PageCriteria;
+import com.pubburi.pub.controller.api.PageResponse;
 import com.pubburi.pub.model.dao.CommentDao;
 import com.pubburi.pub.model.dto.Comment;
 
@@ -24,8 +26,23 @@ public class CommentServiceImpl implements CommentService {
 	}
 
 	@Override
+	public PageResponse<Comment> getCommentsByProductId(int productId, PageCriteria criteria) {
+		if (productId <= 0) {
+			return PageResponse.of(List.of(), criteria, 0);
+		}
+		List<Comment> comments = commentDao.selectByProductIdPaged(productId, criteria.size(), criteria.offset());
+		return PageResponse.of(comments, criteria, commentDao.countByProductId(productId));
+	}
+
+	@Override
 	public List<Comment> getAllComments() {
 		return commentDao.selectAll();
+	}
+
+	@Override
+	public PageResponse<Comment> getAllComments(PageCriteria criteria) {
+		List<Comment> comments = commentDao.selectAllPaged(criteria.size(), criteria.offset());
+		return PageResponse.of(comments, criteria, commentDao.countAll());
 	}
 
 	@Override
