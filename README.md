@@ -33,10 +33,6 @@ npm ci
 npm run dev
 ```
 
-- Web: `http://localhost:5173`
-- API: `http://localhost:9987/api`
-- Swagger UI: `http://localhost:9987/docs`
-
 ## 검증
 
 ```bash
@@ -48,12 +44,3 @@ npm run build
 ```
 
 현재 기준 검증 결과는 backend 9 tests, frontend 10 tests, Vite build 통과입니다.
-
-## 문서
-
-- `docs/LOCAL_RUNBOOK.md`: 로컬 실행과 검증 절차
-- `docs/API-MAP.md`: `/api` endpoint와 응답 계약
-- `docs/LAYERS.md`: frontend/backend/data/runtime layer 책임
-- `docs/REFACTORING.md`: 리팩토링 변경 기록
-- `docs/PERFORMANCE-OPTIMIZATION.md`: 성능 최적화 근거와 최신 build size
-- `AGENT.md`: 작업 규칙과 유지보수 가이드
