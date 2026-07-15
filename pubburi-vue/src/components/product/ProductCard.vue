@@ -1,18 +1,19 @@
 <template>
   <article class="product-card">
-    <button type="button" class="product-image" @click="$emit('open', product)">
+    <RouterLink class="product-image" :to="`/products/${product.id}`">
       <ImageWithFallback :src="productImage(product)" :alt="product.name" />
-    </button>
+    </RouterLink>
     <div class="product-body">
       <p class="product-type">{{ product.type }}</p>
-      <h2>{{ product.name }}</h2>
+      <h2><RouterLink :to="`/products/${product.id}`">{{ product.name }}</RouterLink></h2>
       <p class="product-meta">
         <strong>{{ money(product.price) }}원</strong>
-        <span>{{ product.abv }}%</span>
+        <span>도수 {{ product.abv }}%</span>
       </p>
+      <p class="product-orders">{{ Number(product.orderCount || 0).toLocaleString('ko-KR') }}명이 선택했어요</p>
       <div class="button-row">
-        <button v-if="showDetail" type="button" class="btn btn-outline-dark btn-sm" @click="$emit('open', product)">상세</button>
-        <button type="button" class="btn btn-warning btn-sm" @click="$emit('add', product)">담기</button>
+        <RouterLink class="btn btn-outline-dark btn-sm" :to="`/products/${product.id}`">상세 보기</RouterLink>
+        <button type="button" class="btn btn-gold btn-sm" @click="$emit('add', product)">빠른 담기</button>
       </div>
     </div>
   </article>
@@ -27,11 +28,7 @@ defineProps({
     type: Object,
     required: true,
   },
-  showDetail: {
-    type: Boolean,
-    default: true,
-  },
 })
 
-defineEmits(['open', 'add'])
+defineEmits(['add'])
 </script>

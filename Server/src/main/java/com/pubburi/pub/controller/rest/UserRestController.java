@@ -125,10 +125,13 @@ public class UserRestController {
 	@PutMapping("/admin/users/{id}")
 	public ResponseEntity<ApiResponse<Boolean>> updateUser(@PathVariable String id,
 			@Valid @RequestBody AdminUserRequest request, HttpSession session) {
-		accessGuard.requireAdmin(session);
+		SessionUser admin = accessGuard.requireAdmin(session);
 		User existing = userService.getUserById(id);
 		if (existing == null) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		}
+		if (admin.id().equals(id) && request.role() != null && !"ADMIN".equals(request.role())) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "Current admin role cannot be removed");
 		}
 		User user = new User();
 		user.setId(id);
@@ -136,13 +139,25 @@ public class UserRestController {
 		user.setPass(request.pass());
 		user.setStamps(request.stamps() == null ? existing.getStamps() : request.stamps());
 		user.setRole(request.role() == null ? existing.getRole() : request.role());
-		return ResponseEntity.ok(ApiResponse.ok(userService.modifyUser(user) > 0));
+		if (userService.modifyUser(user) <= 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		}
+		if (admin.id().equals(id)) {
+			session.setAttribute(AccessGuard.SESSION_USER, SessionUser.from(userService.getUserById(id)));
+		}
+		return ResponseEntity.ok(ApiResponse.ok(true));
 	}
 
 	@DeleteMapping("/admin/users/{id}")
 	public ResponseEntity<ApiResponse<Boolean>> deleteUser(@PathVariable String id, HttpSession session) {
-		accessGuard.requireAdmin(session);
-		return ResponseEntity.ok(ApiResponse.ok(userService.removeUser(id) > 0));
+		SessionUser admin = accessGuard.requireAdmin(session);
+		if (admin.id().equals(id)) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "Current admin account cannot be deleted");
+		}
+		if (userService.removeUser(id) <= 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+		}
+		return ResponseEntity.ok(ApiResponse.ok(true));
 	}
 
 }

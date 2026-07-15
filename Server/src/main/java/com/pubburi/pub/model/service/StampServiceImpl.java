@@ -2,7 +2,6 @@ package com.pubburi.pub.model.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.pubburi.pub.model.dao.StampDao;
@@ -11,8 +10,11 @@ import com.pubburi.pub.model.dto.Stamp;
 @Service
 public class StampServiceImpl implements StampService {
 
-	@Autowired
-	private StampDao stampDao;
+	private final StampDao stampDao;
+
+	public StampServiceImpl(StampDao stampDao) {
+		this.stampDao = stampDao;
+	}
 
 	@Override
 	public List<Stamp> getStampsByUserId(String userId) {

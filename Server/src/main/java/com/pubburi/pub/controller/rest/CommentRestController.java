@@ -71,7 +71,9 @@ public class CommentRestController {
 		accessGuard.requireSelfOrAdmin(session, existing.getUserId());
 		existing.setRating(request.rating());
 		existing.setComment(request.comment());
-		commentService.updateComment(existing);
+		if (commentService.updateComment(existing) <= 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found");
+		}
 		return ResponseEntity.ok(ApiResponse.ok(ResponseMapper.comment(existing)));
 	}
 
@@ -79,7 +81,10 @@ public class CommentRestController {
 	public ResponseEntity<ApiResponse<Boolean>> deleteComment(@PathVariable int id, HttpSession session) {
 		Comment existing = findComment(id);
 		accessGuard.requireSelfOrAdmin(session, existing.getUserId());
-		return ResponseEntity.ok(ApiResponse.ok(commentService.removeComment(id) > 0));
+		if (commentService.removeComment(id) <= 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found");
+		}
+		return ResponseEntity.ok(ApiResponse.ok(true));
 	}
 
 	@GetMapping("/admin/comments")

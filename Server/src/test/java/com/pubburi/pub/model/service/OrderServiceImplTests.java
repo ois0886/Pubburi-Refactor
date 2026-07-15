@@ -1,11 +1,13 @@
 package com.pubburi.pub.model.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -78,6 +80,20 @@ class OrderServiceImplTests {
 
 		assertThat(page.items()).isEmpty();
 		assertThat(orderDao.batchDetailCalls).isZero();
+	}
+
+	@Test
+	void missingProductStopsOrderBeforeDetailsAndRewardsAreCreated() {
+		Order order = new Order();
+		order.setUserId("id01");
+		productDao.missingProductIds = Set.of(99);
+
+		assertThatThrownBy(() -> orderService.makeOrder(order, List.of(detail(99, 1))))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessageContaining("Product not found");
+		assertThat(orderDetailDao.insertedDetails).isEmpty();
+		assertThat(stampDao.saved).isNull();
+		assertThat(userDao.incrementedId).isNull();
 	}
 
 	private static OrderDetail detail(int productId, int quantity) {
@@ -291,6 +307,7 @@ class OrderServiceImplTests {
 
 	private static class FakeProductDao implements ProductDao {
 		private Map<Integer, Integer> orderCountIncrements = new LinkedHashMap<>();
+		private Set<Integer> missingProductIds = Set.of();
 
 		@Override
 		public List<Product> selectAll() {
@@ -334,6 +351,9 @@ class OrderServiceImplTests {
 
 		@Override
 		public int incrementOrderCount(int productId, int quantity) {
+			if (missingProductIds.contains(productId)) {
+				return 0;
+			}
 			orderCountIncrements.merge(productId, quantity, Integer::sum);
 			return 1;
 		}

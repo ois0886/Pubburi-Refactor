@@ -62,8 +62,8 @@ scripts/check.sh
 
 현재 검증 기준:
 
-- Backend: `./mvnw test`, 9 tests.
-- Frontend: `npm run test`, 10 tests.
+- Backend: `./mvnw test`, 13 tests.
+- Frontend: `npm run test`, 20 tests.
 - Frontend build: `npm run build`.
 - 로컬 URL: Web `http://localhost:5173`, API `http://localhost:9987/api`, Swagger UI `http://localhost:9987/docs`.
 

@@ -1,6 +1,6 @@
 # Layer Architecture
 
-주전부리(Pubburi)는 로컬 실행을 기준으로 frontend, backend, data, local runtime layer를 분리한다.
+주점부리(Pubburi)는 로컬 실행을 기준으로 frontend, backend, data, local runtime layer를 분리한다.
 
 ## 1. Client Layer
 
@@ -9,19 +9,22 @@
 - 원칙: 화면은 route/view 단위로 나누고, 재사용 UI는 components에 둔다.
 - 현재 UI는 Bootstrap 없이 `style.css`의 로컬 primitive(`btn`, form, card, badge, table row)를 사용한다.
 - 홈 carousel은 Vue 상태로 제어하며, 이미지 asset은 WebP path를 기본으로 사용한다.
+- 공통 loading/empty/error/confirm/quantity UI는 `components/ui`에서 제공하고 44px touch target과 focus-visible을 유지한다.
 
 ## 2. Frontend State Layer
 
 - 위치: `pubburi-vue/src/stores`
 - 역할: 인증, 장바구니, 카탈로그, 관리자 데이터, UI 알림 상태를 관리한다.
 - 원칙: 장바구니처럼 로컬 지속성이 필요한 상태는 store action에서 한 곳으로 처리한다.
-- 관리자 store는 active tab 기준으로 주문/댓글/회원 데이터를 lazy load한다.
-- 상품/매장 관리자 화면은 catalog store를 재사용하되, refresh는 현재 탭 데이터만 갱신한다.
+- 관리자 store는 active tab 기준으로 상품/매장/주문/댓글/회원 데이터를 lazy load한다.
+- 고객 catalog state와 관리자 product/market page state는 분리해 서로의 검색 조건과 페이지를 덮어쓰지 않는다.
+- 상품 탐색 조건은 store 단독 상태가 아니라 route query(`type`, `q`, `sort`, `page`)를 기준으로 복원한다.
+- UI store는 작업 key별 pending 상태와 success/error result를 관리해 중복 제출을 차단한다.
 
 ## 3. API Client Layer
 
 - 위치: `pubburi-vue/src/services/api.js`
-- 역할: `/api` endpoint 호출, `{ data, message, error }` unwrap, page query 생성을 관리한다.
+- 역할: `/api` endpoint 호출, `{ data, message, error }` unwrap, page query 생성, network/non-JSON/status 오류 정규화를 관리한다.
 - 원칙: `credentials: include`를 유지하고, 화면은 raw fetch를 직접 호출하지 않는다.
 
 ## 4. Backend API Layer
@@ -31,7 +34,7 @@
 - 주요 controller: user, product, order, comment, market.
 - 원칙: 모든 endpoint는 `/api` prefix 아래에 두고 `ApiResponse`로 응답한다.
 - CORS는 controller annotation이 아니라 `Server/src/main/java/com/pubburi/pub/config/CorsConfig.java`에서 전역 관리한다.
-- `GlobalExceptionHandler`는 validation, status exception, 잘못된 인자, DB 무결성 오류를 공통 wrapper로 변환한다.
+- `GlobalExceptionHandler`는 validation, status exception, 잘못된 인자, DB 무결성 및 예상하지 못한 오류를 공통 wrapper로 변환한다.
 
 ## 5. Auth Layer
 
@@ -43,7 +46,7 @@
 
 - 위치: `Server/src/main/java/com/pubburi/pub/model/service`
 - 역할: 주문 생성, 회원 처리, 댓글 권한, 스탬프 적립, 관리자 작업의 핵심 규칙을 처리한다.
-- 원칙: 여러 테이블을 함께 바꾸는 작업은 service에서 트랜잭션 경계를 갖고, 비밀번호 저장은 `PasswordHasher`를 사용한다.
+- 원칙: mutation service는 트랜잭션 경계를 갖고, 여러 테이블을 함께 바꾸는 주문은 하나라도 실패하면 전체 롤백하며, 비밀번호 저장은 `PasswordHasher`를 사용한다.
 - `OrderServiceImpl`은 주문 상세 batch attach, 중복 상품 수량 합산, 상세 batch insert, 원자적 stamp 증가를 담당한다.
 - `GradeService`는 profile 등급 계산을 담당하며 controller에 계산 규칙을 두지 않는다.
 

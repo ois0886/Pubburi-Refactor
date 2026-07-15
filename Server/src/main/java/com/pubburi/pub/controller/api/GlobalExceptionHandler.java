@@ -3,6 +3,8 @@ package com.pubburi.pub.controller.api;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException exception) {
 		Map<String, String> fields = new LinkedHashMap<>();
@@ -39,6 +43,14 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(DataIntegrityViolationException exception) {
-		return ResponseEntity.badRequest().body(ApiResponse.error(ApiError.of("BAD_REQUEST", "Invalid related data")));
+		return ResponseEntity.status(HttpStatus.CONFLICT)
+				.body(ApiResponse.error(ApiError.of("CONFLICT", "Related data prevents this operation")));
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception exception) {
+		log.error("Unexpected API error", exception);
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+				.body(ApiResponse.error(ApiError.of("INTERNAL_SERVER_ERROR", "Unexpected server error")));
 	}
 }

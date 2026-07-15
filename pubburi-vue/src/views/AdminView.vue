@@ -1,14 +1,19 @@
 <template>
-  <section v-if="auth.isAdmin" class="view admin-layout">
-    <div class="section-heading">
-      <h1>관리자</h1>
-      <button type="button" class="btn btn-outline-dark btn-sm" @click="refresh">새로고침</button>
+  <section class="view admin-layout">
+    <div class="shop-intro compact-intro">
+      <div>
+        <p class="section-kicker">Operations</p>
+        <h1>관리자 센터</h1>
+        <p>상품, 매장, 주문과 회원 데이터를 한 곳에서 관리합니다.</p>
+      </div>
+      <button type="button" class="btn btn-outline-dark btn-sm" :disabled="ui.isPending('admin-refresh')" @click="refresh">현재 탭 새로고침</button>
     </div>
-    <div class="admin-tabs">
-      <button v-for="tab in adminTabs" :key="tab.key" type="button" :class="{ active: admin.tab === tab.key }" @click="admin.tab = tab.key">
+
+    <nav class="admin-tabs" aria-label="관리 메뉴">
+      <button v-for="tab in adminTabs" :key="tab.key" type="button" :class="{ active: admin.tab === tab.key }" @click="selectTab(tab.key)">
         {{ tab.label }}
       </button>
-    </div>
+    </nav>
 
     <AdminProducts v-if="admin.tab === 'products'" />
     <AdminMarkets v-else-if="admin.tab === 'markets'" />
@@ -16,34 +21,39 @@
     <AdminComments v-else-if="admin.tab === 'comments'" />
     <AdminUsers v-else />
   </section>
-  <p v-else class="empty-state">관리자 권한이 필요합니다.</p>
 </template>
 
 <script setup>
+import { watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import AdminComments from '../components/admin/AdminComments.vue'
 import AdminMarkets from '../components/admin/AdminMarkets.vue'
 import AdminOrders from '../components/admin/AdminOrders.vue'
 import AdminProducts from '../components/admin/AdminProducts.vue'
 import AdminUsers from '../components/admin/AdminUsers.vue'
 import { adminTabs, useAdminStore } from '../stores/admin'
-import { useAuthStore } from '../stores/auth'
-import { useCatalogStore } from '../stores/catalog'
 import { useUiStore } from '../stores/ui'
 
 const admin = useAdminStore()
-const auth = useAuthStore()
-const catalog = useCatalogStore()
 const ui = useUiStore()
+const route = useRoute()
+const router = useRouter()
+const tabKeys = adminTabs.map((tab) => tab.key)
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    admin.tab = tabKeys.includes(tab) ? tab : 'products'
+  },
+  { immediate: true },
+)
+
+function selectTab(tab) {
+  router.push({ name: 'admin', query: { tab, page: 1 } })
+}
 
 function refresh() {
-  return ui.run(async () => {
-    if (admin.tab === 'products') {
-      await catalog.loadProducts({ page: catalog.productsPage.page || 1, size: 20, type: '', q: '' })
-    } else if (admin.tab === 'markets') {
-      await catalog.loadMarkets({ page: catalog.marketsPage.page || 1 })
-    } else {
-      await admin.loadActive()
-    }
-  })
+  const page = Math.max(1, Number.parseInt(route.query.page, 10) || 1)
+  return ui.run('admin-refresh', () => admin.loadActive({ page }))
 }
 </script>

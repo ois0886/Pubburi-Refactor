@@ -2,8 +2,8 @@ package com.pubburi.pub.model.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.pubburi.pub.controller.api.PageCriteria;
 import com.pubburi.pub.controller.api.PageResponse;
@@ -13,8 +13,11 @@ import com.pubburi.pub.model.dto.Market;
 @Service
 public class MarketServiceImpl implements MarketService {
 
-	@Autowired
-	private MarketDao marketDao;
+	private final MarketDao marketDao;
+
+	public MarketServiceImpl(MarketDao marketDao) {
+		this.marketDao = marketDao;
+	}
 
 	@Override
 	public List<Market> getMarketList() {
@@ -36,6 +39,7 @@ public class MarketServiceImpl implements MarketService {
 	}
 
 	@Override
+	@Transactional
 	public int addMarket(Market market) {
 		if (market == null || market.getName() == null || market.getName().isBlank()) {
 			return 0;
@@ -44,6 +48,7 @@ public class MarketServiceImpl implements MarketService {
 	}
 
 	@Override
+	@Transactional
 	public int updateMarket(Market market) {
 		if (market == null || market.getId() <= 0) {
 			return 0;
@@ -52,6 +57,7 @@ public class MarketServiceImpl implements MarketService {
 	}
 
 	@Override
+	@Transactional
 	public int removeMarket(int id) {
 		if (id <= 0) {
 			return 0;

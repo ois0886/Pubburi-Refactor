@@ -82,13 +82,19 @@ public class ProductRestController {
 		accessGuard.requireAdmin(session);
 		Product product = toProduct(request);
 		product.setId(id);
-		return ResponseEntity.ok(ApiResponse.ok(productService.updateProduct(product) > 0));
+		if (productService.updateProduct(product) <= 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
+		}
+		return ResponseEntity.ok(ApiResponse.ok(true));
 	}
 
 	@DeleteMapping("/admin/products/{id}")
 	public ResponseEntity<ApiResponse<Boolean>> deleteProduct(@PathVariable int id, HttpSession session) {
 		accessGuard.requireAdmin(session);
-		return ResponseEntity.ok(ApiResponse.ok(productService.removeProduct(id) > 0));
+		if (productService.removeProduct(id) <= 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
+		}
+		return ResponseEntity.ok(ApiResponse.ok(true));
 	}
 
 	private Product toProduct(ProductRequest request) {

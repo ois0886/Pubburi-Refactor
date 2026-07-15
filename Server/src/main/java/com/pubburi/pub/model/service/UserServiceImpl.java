@@ -3,6 +3,7 @@ package com.pubburi.pub.model.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.pubburi.pub.controller.api.PageCriteria;
 import com.pubburi.pub.controller.api.PageResponse;
@@ -33,6 +34,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public int addUser(User user) {
 		if (user == null || isBlank(user.getId()) || isBlank(user.getName()) || isBlank(user.getPass())) {
 			return 0;
@@ -48,6 +50,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public int modifyUser(User user) {
 		if (user == null || isBlank(user.getId())) {
 			return 0;
@@ -68,6 +71,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public int removeUser(String id) {
 		if (isBlank(id)) {
 			return 0;
@@ -76,6 +80,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public int updateStamp(User user) {
 		if (user == null || isBlank(user.getId())) {
 			return 0;
@@ -93,6 +98,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public User login(User user) {
 		if (user == null || isBlank(user.getId()) || isBlank(user.getPass())) {
 			return null;

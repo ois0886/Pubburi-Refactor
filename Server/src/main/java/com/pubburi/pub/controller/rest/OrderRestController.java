@@ -112,7 +112,10 @@ public class OrderRestController {
 	@DeleteMapping("/admin/orders/{id}")
 	public ResponseEntity<ApiResponse<Boolean>> deleteOrder(@PathVariable int id, HttpSession session) {
 		accessGuard.requireAdmin(session);
-		return ResponseEntity.ok(ApiResponse.ok(orderService.removeOrder(id) > 0));
+		if (orderService.removeOrder(id) <= 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
+		}
+		return ResponseEntity.ok(ApiResponse.ok(true));
 	}
 
 	private boolean isBlank(String value) {

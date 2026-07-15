@@ -2,7 +2,6 @@ package com.pubburi.pub.model.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,8 +13,11 @@ import com.pubburi.pub.model.dto.Comment;
 @Service
 public class CommentServiceImpl implements CommentService {
 
-	@Autowired
-	private CommentDao commentDao;
+	private final CommentDao commentDao;
+
+	public CommentServiceImpl(CommentDao commentDao) {
+		this.commentDao = commentDao;
+	}
 
 	@Override
 	public List<Comment> getCommentsByProductId(int productId) {
@@ -55,6 +57,7 @@ public class CommentServiceImpl implements CommentService {
 	}
 
 	@Override
+	@Transactional
 	public int updateComment(Comment comment) {
 		if (comment == null || comment.getId() <= 0) {
 			return 0;
@@ -63,6 +66,7 @@ public class CommentServiceImpl implements CommentService {
 	}
 
 	@Override
+	@Transactional
 	public int removeComment(int id) {
 		if (id <= 0) {
 			return 0;

@@ -1,6 +1,6 @@
 # Performance Optimization
 
-주전부리(Pubburi) 리팩토링 중 수행한 성능 관련 변경과 확인 결과를 기록한다.
+주점부리(Pubburi) 리팩토링 중 수행한 성능 관련 변경과 확인 결과를 기록한다.
 
 ## 2026-07-01 Optimization Pass
 
@@ -26,7 +26,7 @@
 - 관리자 store는 active tab 기준 lazy load로 변경해 관리자 화면 진입/갱신 요청 수를 줄였다.
 - Bootstrap CSS/JS와 package dependency를 제거하고 로컬 CSS primitive로 대체했다.
 - Bootstrap carousel은 Vue 상태 기반 carousel로 대체해 JS bundle을 줄였다.
-- 전통주 커머스 톤으로 홈/상품/상세/장바구니/프로필/관리자 UI를 정리했다.
+- 여러 주종을 동등하게 다루는 종합 주류 큐레이션 톤으로 홈/상품/상세/장바구니/프로필/관리자 UI를 정리했다.
 
 ### Image Assets
 
@@ -47,6 +47,34 @@
   - CSS: 8.86 KB, gzip 2.63 KB.
   - JS: 127.53 KB, gzip 45.66 KB.
   - build time: 약 0.7초.
+
+## 2026-07-15 Commerce UX And Safety Pass
+
+### Frontend
+
+- 고객 catalog와 관리자 product/market page state를 분리해 화면 이동 시 검색 조건이 덮어써지는 문제를 제거했다.
+- 상품 필터를 route query에서 복원하고 관리자 탭도 active tab만 lazy load하는 구조를 유지했다.
+- 작업 key별 pending state로 중복 로그인, 저장, 삭제, 주문 요청을 차단한다.
+- loading skeleton, empty/404, confirm dialog, quantity stepper를 로컬 공통 컴포넌트로 구현해 외부 UI dependency를 추가하지 않았다.
+- API client가 network/non-JSON/status 오류를 한 경로에서 처리해 화면별 오류 분기를 줄였다.
+
+### Backend
+
+- mutation service에 transaction 경계를 명시하고 field injection을 constructor injection으로 교체했다.
+- 주문 상품 update, 상세 batch insert, stamp insert, 회원 stamp 증가의 반영 건수를 검증해 부분 저장을 방지한다.
+- 없는 리소스의 수정/삭제와 관리자 자기 계정 변경 규칙을 controller에서 빠르게 차단한다.
+
+### Verification Snapshot
+
+- Backend: `./mvnw test` 통과, 13 tests.
+- Frontend: `npm run test` 통과, 20 tests.
+- Frontend build: `npm run build` 통과.
+- Build output:
+  - CSS: 24.03 KB, gzip 5.82 KB.
+  - JS: 164.90 KB, gzip 55.82 KB.
+  - build time: 약 0.7초.
+
+UI 상태와 접근성 표현 확대로 CSS/JS 크기는 증가했지만 외부 runtime dependency는 추가하지 않았으며, lazy admin fetch와 WebP asset 정책은 그대로 유지한다.
 
 ## 문서 갱신 체크리스트
 

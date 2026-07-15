@@ -72,13 +72,19 @@ public class MarketRestController {
 		accessGuard.requireAdmin(session);
 		Market market = toMarket(request);
 		market.setId(id);
-		return ResponseEntity.ok(ApiResponse.ok(marketService.updateMarket(market) > 0));
+		if (marketService.updateMarket(market) <= 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Market not found");
+		}
+		return ResponseEntity.ok(ApiResponse.ok(true));
 	}
 
 	@DeleteMapping("/admin/markets/{id}")
 	public ResponseEntity<ApiResponse<Boolean>> deleteMarket(@PathVariable int id, HttpSession session) {
 		accessGuard.requireAdmin(session);
-		return ResponseEntity.ok(ApiResponse.ok(marketService.removeMarket(id) > 0));
+		if (marketService.removeMarket(id) <= 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Market not found");
+		}
+		return ResponseEntity.ok(ApiResponse.ok(true));
 	}
 
 	private Market toMarket(MarketRequest request) {

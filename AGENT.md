@@ -1,6 +1,6 @@
 # Pubburi Agent Guide
 
-이 문서는 주전부리(Pubburi) 리팩토링 저장소에서 작업하는 에이전트와 개발자가 지켜야 할 운영 규칙입니다. 프로젝트는 SSAFY 13기 관통 프로젝트 기반이며, 현재 목표는 로컬 실행 가능한 구조를 유지하면서 UI, API, 성능 최적화를 계속 안전하게 반영하는 것입니다.
+이 문서는 주점부리(Pubburi) 리팩토링 저장소에서 작업하는 에이전트와 개발자가 지켜야 할 운영 규칙입니다. 프로젝트는 SSAFY 13기 관통 프로젝트 기반이며, 현재 목표는 로컬 실행 가능한 구조를 유지하면서 UI, API, 성능 최적화를 계속 안전하게 반영하는 것입니다.
 
 ## 기본 원칙
 
@@ -38,7 +38,8 @@
 - 확인: Router view, Pinia store, `src/services/api.js`, 공통 컴포넌트 경계를 유지한다.
 - 관리자 데이터는 active tab lazy load를 유지한다.
 - 이미지 path는 WebP 우선으로 유지하고, `ImageWithFallback` fallback도 WebP icon을 사용한다.
-- UI는 전통주 커머스 톤의 neutral/ink/green/gold palette와 8px radius 기준을 유지한다.
+- UI는 특정 주종을 대표로 두지 않는 종합 주류 큐레이션 톤의 ink/forest/gold/cream palette와 8px radius 기준을 유지한다.
+- 고객용 catalog page와 관리자용 product/market page state를 다시 공유하지 않는다.
 - 검증: `cd pubburi-vue && npm run test && npm run build`.
 
 ### data-agent
@@ -56,7 +57,7 @@
 ### performance-agent
 
 - 담당: DB index, query 범위, dependency pruning, build size, API round-trip 감소 기록.
-- 확인: 변경 전후의 근거를 `docs/PERFORMANCE-OPTIMIZATION.md`에 남긴다. 현재 기준은 backend 9 tests, frontend 10 tests, `dist/images` 약 3.4 MB다.
+- 확인: 변경 전후의 근거를 `docs/PERFORMANCE-OPTIMIZATION.md`에 남긴다. 현재 기준은 backend 13 tests, frontend 20 tests, `dist/images` 약 3.4 MB다.
 - 검증: backend test 시간, frontend build 결과, 주요 번들 크기 또는 쿼리 개선 근거를 기록한다.
 
 ### docs-agent

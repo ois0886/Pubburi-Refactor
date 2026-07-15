@@ -50,20 +50,31 @@ public class OrderServiceImpl implements OrderService {
 			order.setCompleted("N");
 		}
 		int result = orderDao.insert(order);
+		if (result <= 0) {
+			return 0;
+		}
 		int totalQuantity = 0;
 		for (OrderDetail detail : normalizedDetails) {
 			detail.setOrderId(order.getoId());
-			productDao.incrementOrderCount(detail.getProductId(), detail.getQuantity());
+			if (productDao.incrementOrderCount(detail.getProductId(), detail.getQuantity()) <= 0) {
+				throw new IllegalArgumentException("Product not found: " + detail.getProductId());
+			}
 			totalQuantity += detail.getQuantity();
 		}
-		orderDetailDao.insertAll(normalizedDetails);
+		if (orderDetailDao.insertAll(normalizedDetails) != normalizedDetails.size()) {
+			throw new IllegalStateException("Order details could not be created");
+		}
 		Stamp stamp = new Stamp();
 		stamp.setUserId(order.getUserId());
 		stamp.setOrderId(order.getoId());
 		stamp.setQuantity(totalQuantity);
-		stampDao.insert(stamp);
+		if (stampDao.insert(stamp) <= 0) {
+			throw new IllegalStateException("Stamp could not be created");
+		}
 
-		userDao.incrementStamps(order.getUserId(), totalQuantity);
+		if (userDao.incrementStamps(order.getUserId(), totalQuantity) <= 0) {
+			throw new IllegalArgumentException("User not found: " + order.getUserId());
+		}
 		return result;
 	}
 
@@ -104,6 +115,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+	@Transactional
 	public int updateOrder(Order order) {
 		if (order == null || order.getoId() <= 0) {
 			return 0;
@@ -112,6 +124,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
+	@Transactional
 	public int removeOrder(int oId) {
 		if (oId <= 0) {
 			return 0;

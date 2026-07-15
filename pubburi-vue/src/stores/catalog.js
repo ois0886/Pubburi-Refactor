@@ -52,6 +52,7 @@ export const useCatalogStore = defineStore('catalog', {
       return this.marketsPage
     },
     async loadProduct(id) {
+      this.selectedProduct = null
       this.selectedProduct = await api.product(id)
       return this.selectedProduct
     },
@@ -64,9 +65,19 @@ export const useCatalogStore = defineStore('catalog', {
       await this.loadComments(payload.productId)
       return comment
     },
+    async updateComment(commentId, payload) {
+      const comment = await api.updateComment(commentId, payload)
+      await this.loadComments(this.selectedProduct.id, { page: this.commentsPage.page })
+      return comment
+    },
     async deleteComment(commentId) {
       await api.deleteComment(commentId)
-      this.commentsPage = { ...this.commentsPage, items: this.comments.filter((item) => item.id !== commentId) }
+      const nextPage = this.comments.length === 1 && this.commentsPage.page > 1 ? this.commentsPage.page - 1 : this.commentsPage.page
+      await this.loadComments(this.selectedProduct.id, { page: nextPage })
+    },
+    clearProduct() {
+      this.selectedProduct = null
+      this.commentsPage = emptyPage(10)
     },
   },
 })

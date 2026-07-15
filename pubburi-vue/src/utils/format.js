@@ -16,3 +16,17 @@ export function money(value) {
 export function date(value) {
   return value ? new Date(value).toLocaleString('ko-KR') : ''
 }
+
+export const orderTypeLabels = {
+  TAKEOUT: '포장 주문',
+  ONLINE: '온라인 주문',
+  OFFLINE: '매장 주문',
+}
+
+export function orderType(value) {
+  return orderTypeLabels[value] || value || '-'
+}
+
+export function orderTotal(order) {
+  return (order?.details || []).reduce((sum, detail) => sum + Number(detail.sumPrice || detail.unitPrice * detail.quantity || 0), 0)
+}

@@ -1,8 +1,32 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api'
 
+const STATUS_MESSAGES = {
+  0: '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+  400: '입력한 내용을 다시 확인해 주세요.',
+  401: '로그인이 필요합니다.',
+  403: '이 작업을 수행할 권한이 없습니다.',
+  404: '요청한 정보를 찾을 수 없습니다.',
+  409: '현재 상태에서는 요청을 처리할 수 없습니다.',
+}
+
+const CODE_MESSAGES = {
+  NETWORK_ERROR: STATUS_MESSAGES[0],
+  VALIDATION_FAILED: STATUS_MESSAGES[400],
+  UNAUTHORIZED: STATUS_MESSAGES[401],
+  FORBIDDEN: STATUS_MESSAGES[403],
+  NOT_FOUND: STATUS_MESSAGES[404],
+}
+
+function friendlyMessage(error, status) {
+  if (CODE_MESSAGES[error?.code]) return CODE_MESSAGES[error.code]
+  if (STATUS_MESSAGES[status]) return STATUS_MESSAGES[status]
+  if (status >= 500) return '서버에 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+  return error?.message || '요청을 처리하지 못했습니다.'
+}
+
 export class ApiClientError extends Error {
   constructor(error, status) {
-    super(error?.message || 'Request failed')
+    super(friendlyMessage(error, status))
     this.name = 'ApiClientError'
     this.status = status
     this.code = error?.code || 'REQUEST_FAILED'
@@ -22,17 +46,34 @@ export function pageQuery(params = {}, defaults = {}) {
 }
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-    ...options,
-  })
+  let response
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+      ...options,
+    })
+  } catch (cause) {
+    const error = new ApiClientError({ code: 'NETWORK_ERROR' }, 0)
+    error.cause = cause
+    throw error
+  }
 
   const text = await response.text()
-  const envelope = text ? JSON.parse(text) : null
+  let envelope = null
+  if (text) {
+    try {
+      envelope = JSON.parse(text)
+    } catch {
+      if (!response.ok) {
+        throw new ApiClientError({ code: response.statusText || 'INVALID_RESPONSE' }, response.status)
+      }
+      throw new ApiClientError({ code: 'INVALID_RESPONSE', message: '서버 응답을 읽을 수 없습니다.' }, response.status)
+    }
+  }
   const hasEnvelope = envelope && Object.prototype.hasOwnProperty.call(envelope, 'data')
 
   if (!response.ok || envelope?.error) {

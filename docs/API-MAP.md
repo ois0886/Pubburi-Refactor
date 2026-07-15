@@ -14,7 +14,7 @@
 }
 ```
 
-실패 응답의 `error`는 `{ "code": "", "message": "", "fields": {} }` 형태다. 목록 API의 `data`는 `PageResponse<T>`이며 `{ items, page, size, total, totalPages, hasNext }`를 가진다.
+실패 응답의 `error`는 `{ "code": "", "message": "", "fields": {} }` 형태다. 목록 API의 `data`는 `PageResponse<T>`이며 `{ items, page, size, total, totalPages, hasNext }`를 가진다. 없는 리소스의 수정/삭제는 `404`, 현재 관리자 자기 계정 삭제와 관계 데이터 충돌은 `409`를 반환한다.
 
 인증이 필요한 API는 session cookie를 사용하며, frontend API client는 `credentials: include`를 유지한다.
 
@@ -30,6 +30,8 @@
 - `PUT /api/admin/users/{id}`: 관리자 사용자 수정
 - `DELETE /api/admin/users/{id}`: 관리자 사용자 삭제
 
+현재 로그인한 관리자는 자기 계정을 삭제하거나 자신의 `ADMIN` 역할을 제거할 수 없다. 관리자 수정의 `role`은 `USER` 또는 `ADMIN`만 허용한다.
+
 ## Products
 
 - `GET /api/products?page=1&size=12&type=&q=&sort=popular`: 상품 목록, 검색, 카테고리, 정렬
@@ -38,6 +40,8 @@
 - `POST /api/admin/products`: 관리자 상품 등록
 - `PUT /api/admin/products/{id}`: 관리자 상품 수정
 - `DELETE /api/admin/products/{id}`: 관리자 상품 삭제
+
+고객 상품 화면의 공식 query contract는 `type`, `q`, `sort(popular|priceAsc|priceDesc|name)`, `page`이며 frontend router가 잘못된 값을 기본값으로 정규화한다.
 
 ## Comments
 
@@ -56,7 +60,7 @@
 - `PATCH /api/admin/orders/{id}/complete`: 주문 완료 처리
 - `DELETE /api/admin/orders/{id}`: 주문 삭제
 
-주문 생성 request의 `details`는 `{ productId, quantity }` 배열이다. backend는 같은 `productId`를 합산해 저장하며, `quantity <= 0` 또는 `productId <= 0`은 `BAD_REQUEST`로 처리한다.
+주문 생성 request의 `details`는 `{ productId, quantity }` 배열이다. backend는 같은 `productId`를 합산해 저장하며, `quantity <= 0`, `productId <= 0`, 존재하지 않는 상품은 `BAD_REQUEST`로 처리하고 주문·상세·주문 수·스탬프 변경을 전체 롤백한다.
 
 주문 응답의 `details`는 상품명, 타입, 이미지, 단가, 합계를 포함한다. 목록/상세 API 모두 같은 `OrderResponse` 형태를 유지한다.
 
